@@ -1,198 +1,227 @@
 #include "TSPTW.h"
 #include <algorithm>
-#include <limits>
+#include <stdexcept>
+#include <iostream>
 
-TSPTW::TSPTW(int _n, const vector<vector<double>> &_C,
-             const vector<double> &_e, const vector<double> &_l, const vector<double> &_d)
-    : n(_n), C(_C), e(_e), l(_l), d(_d),
-      solver(MPSolver::CreateSolver("SCIP"))
-{ // Khởi tạo trực tiếp trong danh sách khởi tạo
-    if (!solver)
+TSPTW::TSPTW(int n, const std::vector<std::vector<double>> &distance_matrix,
+             const std::vector<double> &earliest, const std::vector<double> &latest,
+             const std::vector<double> &service_times, double start_time)
+    : n_(n), distance_matrix_(distance_matrix), earliest_(earliest),
+      latest_(latest), service_times_(service_times), start_time_(start_time)
+{
+    // std::cout << "tạo đối tượng" << std::endl;
+    validateData();
+    // std::cout << "xong" << std::endl;
+}
+
+void TSPTW::validateData()
+{
+    // std::cout << n_ << std::endl;
+    // std::cout << distance_matrix_.size() << std::endl;
+    if (n_ <= 0)
+        throw std::invalid_argument("Number of customers must be positive");
+
+    if (distance_matrix_.size() != n_ + 1)
+        throw std::invalid_argument("Distance matrix rows mismatch");
+
+    // std::cout << "không lỗi" << std::endl;
+
+    for (const auto &row : distance_matrix_)
+        if (row.size() != n_ + 1)
+            throw std::invalid_argument("Distance matrix columns mismatch");
+
+    if (earliest_.size() != n_ + 1 || latest_.size() != n_ + 1 || service_times_.size() != n_ + 1)
+        throw std::invalid_argument("Time windows size mismatch");
+
+    for (int i = 0; i <= n_; ++i)
     {
-        throw runtime_error("SCIP solver unavailable");
+        if (earliest_[i] > latest_[i])
+            throw std::invalid_argument("Invalid time window for node " + std::to_string(i));
+        if (distance_matrix_[i][i] != 0.0)
+            throw std::invalid_argument("Diagonal distance must be zero");
     }
+}
+
+double TSPTW::computeBigM() const
+{
+    double max_time = 0;
+    for (double t : latest_)
+        max_time = std::max(max_time, t);
+    return max_time * 2;
+}
+
+void TSPTW::initializeSolver()
+{
+    solver_ = std::unique_ptr<operations_research::MPSolver>(
+        operations_research::MPSolver::CreateSolver("SCIP"));
+
+    if (!solver_)
+        throw std::runtime_error("Failed to create SCIP solver");
+
+    solver_->set_time_limit(120000); // 2 minutes
+
+    // Tắt đầu ra của SCIP
+    solver_->SetSolverSpecificParametersAsString(
+        "display/verblevel = 0\n" // Tắt hiển thị log
+        "presolving/maxrounds = 10\n"
+        "separating/maxrounds = 20\n"
+        "limits/gap = 0.01\n");
+}
+
+void TSPTW::createVariables()
+{
+    x_.resize(n_ + 1, std::vector<operations_research::MPVariable *>(n_ + 1, nullptr));
+
+    for (int i = 0; i <= n_; ++i)
+    {
+        for (int j = 0; j <= n_; ++j)
+        {
+            if (i != j)
+            {
+                x_[i][j] = solver_->MakeBoolVar("x_" + std::to_string(i) + "_" + std::to_string(j));
+            }
+        }
+    }
+
+    t_.resize(n_ + 1);
+    for (int i = 0; i <= n_; ++i)
+    {
+        t_[i] = solver_->MakeNumVar(earliest_[i], latest_[i], "t_" + std::to_string(i));
+    }
+    t_[0]->SetBounds(start_time_, start_time_);
 }
 
 void TSPTW::addConstraints()
 {
-    // Thiết lập hàm mục tiêu
-    MPObjective *const objective = solver->MutableObjective();
+    // Flow constraints
+    for (int i = 1; i <= n_; ++i)
+    {
+        operations_research::LinearExpr incoming, outgoing;
+        for (int j = 0; j <= n_; ++j)
+        {
+            if (i != j)
+            {
+                incoming += x_[j][i];
+                outgoing += x_[i][j];
+            }
+        }
+        solver_->MakeRowConstraint(incoming == 1, "in_" + std::to_string(i));
+        solver_->MakeRowConstraint(outgoing == 1, "out_" + std::to_string(i));
+    }
+
+    // Depot constraints
+    operations_research::LinearExpr depart, ret;
+    for (int j = 1; j <= n_; ++j)
+    {
+        depart += x_[0][j];
+        ret += x_[j][0];
+    }
+    solver_->MakeRowConstraint(depart == 1, "depart");
+    solver_->MakeRowConstraint(ret == 1, "return");
+
+    // Time constraints
+    const double M = computeBigM();
+    for (int i = 0; i <= n_; ++i)
+    {
+        for (int j = 1; j <= n_; ++j)
+        {
+            if (i != j && x_[i][j] != nullptr)
+            {
+                auto *ct = solver_->MakeRowConstraint(
+                    -solver_->infinity(),
+                    M - distance_matrix_[i][j] - service_times_[i],
+                    "time_" + std::to_string(i) + "_" + std::to_string(j));
+
+                ct->SetCoefficient(t_[i], 1.0);
+                ct->SetCoefficient(t_[j], -1.0);
+                ct->SetCoefficient(x_[i][j], M);
+            }
+        }
+    }
+}
+
+void TSPTW::setObjective()
+{
+    operations_research::MPObjective *const objective = solver_->MutableObjective();
     objective->SetMinimization();
 
-    // Khởi tạo biến
-    x.resize(n + 1, vector<MPVariable *>(n + 1, nullptr));
-    t.resize(n + 1, nullptr);
-
-    // Tạo biến quyết định x[i][j] (binary)
-    for (int i = 0; i <= n; ++i)
+    for (int i = 0; i <= n_; ++i)
     {
-        for (int j = 0; j <= n; ++j)
+        for (int j = 0; j <= n_; ++j)
         {
-            if (i != j)
+            if (i != j && x_[i][j] != nullptr)
             {
-                x[i][j] = solver->MakeBoolVar("x_" + to_string(i) + "_" + to_string(j));
-                objective->SetCoefficient(x[i][j], C[i][j]);
-            }
-        }
-
-        // Tạo biến thời gian đến t[i]
-        double lb = max(e[i], 0.0);
-        double ub = l[i];
-        t[i] = solver->MakeNumVar(lb, ub, "t_" + to_string(i));
-    }
-
-    // Ràng buộc vào-ra mỗi điểm (trừ kho)
-    for (int i = 1; i <= n; ++i)
-    {
-        LinearExpr incoming, outgoing;
-        for (int j = 0; j <= n; ++j)
-        {
-            if (i != j)
-            {
-                if (x[j][i])
-                    incoming += x[j][i];
-                if (x[i][j])
-                    outgoing += x[i][j];
-            }
-        }
-        solver->MakeRowConstraint(incoming == 1, "in_" + to_string(i));
-        solver->MakeRowConstraint(outgoing == 1, "out_" + to_string(i));
-    }
-
-    // Ràng buộc kho (điểm 0)
-    LinearExpr departures, returns;
-    for (int j = 1; j <= n; ++j)
-    {
-        if (x[0][j])
-            departures += x[0][j];
-        if (x[j][0])
-            returns += x[j][0];
-    }
-    solver->MakeRowConstraint(departures == 1, "depart");
-    solver->MakeRowConstraint(returns == 1, "return");
-
-    // Ràng buộc thời gian (MTZ)
-    const double M = 1e6;
-    for (int i = 0; i <= n; ++i)
-    {
-        for (int j = 1; j <= n; ++j)
-        {
-            if (i != j && x[i][j])
-            {
-                MPConstraint *const ct = solver->MakeRowConstraint(
-                    -solver->infinity(), M - d[i] - C[i][j]);
-                ct->SetCoefficient(t[i], 1);
-                ct->SetCoefficient(t[j], -1);
-                ct->SetCoefficient(x[i][j], M);
+                objective->SetCoefficient(x_[i][j], distance_matrix_[i][j]);
             }
         }
     }
 }
 
-vector<vector<int>> TSPTW::findSubtours()
+std::vector<int> TSPTW::extractSolution() const
 {
-    vector<int> visited(n + 1, false);
-    vector<vector<int>> subtours;
-
-    for (int i = 1; i <= n; ++i)
-    {
-        if (!visited[i])
-        {
-            vector<int> subtour;
-            int current = i;
-            while (!visited[current])
-            {
-                visited[current] = true;
-                subtour.push_back(current);
-                for (int j = 1; j <= n; ++j)
-                {
-                    if (x[current][j] && x[current][j]->solution_value() > 0.5)
-                    {
-                        current = j;
-                        break;
-                    }
-                }
-            }
-            if (subtour.size() > 1 && subtour.size() < n)
-            {
-                subtours.push_back(subtour);
-            }
-        }
-    }
-    return subtours;
-}
-
-void TSPTW::addSubtourConstraints(const vector<vector<int>> &subtours)
-{
-    for (const auto &subtour : subtours)
-    {
-        LinearExpr expr;
-        for (int i : subtour)
-        {
-            for (int j : subtour)
-            {
-                if (i != j && x[i][j])
-                {
-                    expr += x[i][j];
-                }
-            }
-        }
-        solver->MakeRowConstraint(expr <= subtour.size() - 1);
-    }
-}
-
-void TSPTW::solve()
-{
-    addConstraints();
-    const int max_iterations = 100;
-    int iteration = 0;
-
-    while (iteration++ < max_iterations)
-    {
-        const MPSolver::ResultStatus status = solver->Solve();
-
-        if (status != MPSolver::OPTIMAL && status != MPSolver::FEASIBLE)
-        {
-            cerr << "No solution found in iteration " << iteration << endl;
-            break;
-        }
-
-        auto subtours = findSubtours();
-        if (subtours.empty())
-        {
-            cout << "Found optimal solution after " << iteration << " iterations" << endl;
-            break;
-        }
-
-        addSubtourConstraints(subtours);
-    }
-}
-
-vector<int> TSPTW::getSolution()
-{
-    vector<int> path;
-    if (x.empty())
-        return path;
-
+    std::vector<int> solution;
+    std::vector<bool> visited(n_ + 1, false);
     int current = 0;
-    path.push_back(current);
+    solution.push_back(current);
+    visited[current] = true;
 
-    while (true)
+    while (solution.size() <= n_)
     {
         bool found = false;
-        for (int j = 0; j <= n; ++j)
+        for (int j = 0; j <= n_; ++j)
         {
-            if (j != current && x[current][j] && x[current][j]->solution_value() > 0.5)
+            if (!visited[j] && x_[current][j]->solution_value() > 0.99)
             {
                 current = j;
-                path.push_back(current);
+                solution.push_back(current);
+                visited[current] = true;
                 found = true;
                 break;
             }
         }
-        if (!found || current == 0)
+        if (!found)
             break;
     }
 
-    return path;
+    // Return to depot
+    if (x_[current][0]->solution_value() > 0.99)
+    {
+        solution.push_back(0);
+    }
+
+    if (solution.size() != n_ + 2)
+    {
+        throw std::runtime_error("Invalid solution: incomplete route");
+    }
+
+    return solution;
+}
+
+std::pair<int, std::vector<int>> TSPTW::solve()
+{
+    initializeSolver();
+    createVariables();
+    addConstraints();
+    setObjective();
+
+    const auto status = solver_->Solve();
+    operations_research::MPObjective *objective = solver_->MutableObjective();
+
+    switch (status)
+    {
+    case operations_research::MPSolver::OPTIMAL:
+        //std::cout << "Optimal solution found! Cost: "
+                 // << objective->Value() << "\n";
+        return {0, extractSolution()};
+
+    case operations_research::MPSolver::FEASIBLE:
+        //std::cout << "Feasible solution found (gap: "
+                  //<< objective->BestBound() << ")\n";
+        return {1, extractSolution()};
+
+    default:
+        // std::cerr << "Solver status: " << status << "\n";
+        // std::cerr << "Best bound: " << objective->BestBound() << "\n";
+        return {-1, {}};
+    }
 }

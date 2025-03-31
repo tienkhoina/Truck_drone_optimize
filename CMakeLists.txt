@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 project(ProjectGA)
 
+# Sử dụng UTF-8 để tránh lỗi encoding trên Windows
+add_compile_options(/utf-8)
 # Chỉ định toolchain của vcpkg (đảm bảo vcpkg được sử dụng để tìm thư viện)
 set(CMAKE_TOOLCHAIN_FILE "C:/vcpkg/scripts/buildsystems/vcpkg.cmake" CACHE STRING "")
 

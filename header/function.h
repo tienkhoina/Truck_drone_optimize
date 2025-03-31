@@ -13,5 +13,6 @@ bool checkInsertNext(vector<int> x, int v, int roleId,double now);
 bool checkValidVector(vector<int> x, int roleId,double now);
 double getTimeDroneTrip(vector<int> x, double now);
 double jaccardSimilarity(const vector<vector<int>> &solutionA, const vector<vector<int>> &solutionB);
+pair<int, vector<int>> solverTSPTWmapping(const vector<int> &Trip, const vector<vector<double>> &Ex, double k_trip, double start_time);
 
 #endif

@@ -2,6 +2,7 @@
 #include "function.h"
 #include "Constants.h"
 #include <set>
+#include "TSPTW.h"
 
 
 random_device rd;
@@ -162,4 +163,51 @@ double jaccardSimilarity(const vector<vector<int>> &solutionA, const vector<vect
     // Tính chỉ số Jaccard
     double jaccardIndex = (double)intersectionSet.size() / unionSet.size();
     return jaccardIndex;
+}
+pair<int,vector<int>> solverTSPTWmapping(const vector<int> &Trip, const vector<vector<double>> &Ex, double k_trip,double start_time){
+    ////////cout << "bắt đầu giải" << endl;
+    int size = Trip.size() - 1;
+    //////cout << size << endl;
+    vector<int> mapping(size);
+    vector<vector<double>> map_cost(size, vector<double>(size));
+    vector<double> earliest(size);
+    vector<double> lastest(size);
+    vector<double> service_time(size, 0);
+
+    for (int i = 0; i < size ; i++){
+        
+        mapping[i] = Trip[i];
+        //////cout << mapping[i];
+    }
+    //////cout << endl;
+
+    for (int i = 0; i < size; i++)
+    {
+        for (int j = 0; j <size; j++)
+        {
+            map_cost[i][j] = k_trip * Ex[mapping[i]][mapping[j]];
+            //////cout << map_cost[i][j] << " ";
+        }
+        //////cout << endl;
+    }
+    
+    for (int i = 0; i < size; i++){
+        earliest[i] = Cus[mapping[i]].start;
+        lastest[i] = Cus[mapping[i]].end;
+        //////cout << earliest[i] <<" "<< lastest[i] << endl;
+    }
+
+    TSPTW tsptw(size-1, map_cost, earliest, lastest, service_time, start_time);
+    ////////cout << "tạo xong đối tượng";
+    auto solution = tsptw.solve();
+    if(solution.first != -1){
+        vector<int> ReturnTrip;
+        for(int x: solution.second){
+            ReturnTrip.push_back(mapping[x]);
+        }
+        return {solution.first, ReturnTrip};
+    }
+    else{
+        return {-1, {}};
+    }  
 }

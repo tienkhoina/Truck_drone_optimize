@@ -13,9 +13,14 @@ Population::Population(int _n, int _size) : n(_n), size(_size)
     set<Solution> inserted;
     int n_random_shuffle = size;
     cout << "Tạo cá thể bởi RD: " << n_random_shuffle << endl;
+    // cout << "n_random_shuffle = " << n_random_shuffle << endl;
+    // cout << "inserted.size() = " << inserted.size() << endl;
 
     while (inserted.size() < n_random_shuffle)
     {
+        // cout << "chạy while" << endl;
+        int num_truck = 0;
+        int num_drone = 0;
         vector<vector<int>> Route;  // Danh sách các trip
         vector<int> Role;           // Role tương ứng với từng trip
         unordered_set<int> S_all;   // Tất cả khách hàng
@@ -28,9 +33,10 @@ Population::Population(int _n, int _size) : n(_n), size(_size)
             if (Cus[j].role == 1)
                 S_role1.insert(j);
         }
+        // cout << "ok1" << endl;
 
         // **2️⃣ Truck phục vụ ngẫu nhiên khách hàng trước**
-        while (!S_role1.empty()) // Lặp đến khi không còn khách role = 1
+        while (!S_role1.empty() && num_truck<max_truck ) // Lặp đến khi không còn khách role = 1
         {
 
             vector<int> route = {0}; // Bắt đầu từ kho
@@ -45,12 +51,11 @@ Population::Population(int _n, int _size) : n(_n), size(_size)
                 if (checkInsertNext(route, customer, 0, now))
                 {
                     route.push_back(customer);
-                    last = customer;
-                    
+                    last = customer;                  
                     toRemove.insert(customer);
+                    if (getRandomDouble(0, 1) < drop_insert_custom)
+                        break;
                 }
-                if(getRandomDouble(0,1)<0.2) break;
-
             }
 
         
@@ -67,21 +72,20 @@ Population::Population(int _n, int _size) : n(_n), size(_size)
                 route.push_back(0); // Quay về kho
                 Route.push_back(route);
                 Role.push_back(0); // Truck có role = 0
+                num_truck++;
             }
 
             // cout << "role 1 còn:";
             // for(int x : S_role1)
             //     cout << x << " ";
+
+            if(getRandomDouble(0,1)<drop_insert_trip) break;
         }
+        // cout << "ok2" << endl;
 
         // **3️⃣ Đảm bảo Truck đã phục vụ hết role = 1**
-        if (!S_role1.empty())
-        {
-            cerr << "Lỗi: Truck chưa phục vụ hết khách role = 1!" << endl;
-            return;
-        }
-        else{
-            // cout << "đã hết role 1";
+        for(int Cus_role1 : S_role1){
+            S_all.erase(Cus_role1);
         }
 
 
@@ -91,7 +95,7 @@ Population::Population(int _n, int _size) : n(_n), size(_size)
         double lastDroneTime = 0; // Thời điểm bắt đầu trip cuối cùng mà Drone thực hiện
         int lastDroneRole = -1;   // Role của Drone trước đó (-1 nghĩa là chưa có Drone nào)
 
-        while (!S_all.empty())
+        while (!S_all.empty() && num_drone<max_drone)
         {
             bool can_continue = true;
             while (can_continue)
@@ -111,9 +115,9 @@ Population::Population(int _n, int _size) : n(_n), size(_size)
                         route.push_back(customer);
                         last = customer;
                         toRemove.insert(customer);
+                        if (getRandomDouble(0, 1) < drop_insert_custom)
+                            break;
                     }
-                    if (getRandomDouble(0, 1) < 0.2)
-                        break;
                 }
 
 
@@ -131,17 +135,24 @@ Population::Population(int _n, int _size) : n(_n), size(_size)
                     lastDroneTime = getTimeDroneTrip(route,now); // Cập nhật thời gian bắt đầu của trip cuối cùng của Drone
                     // cout <<"last time" << lastDroneTime;
                     lastDroneRole = role; // Ghi nhớ role của trip vừa thực hiện
+                    if(getRandomDouble(0,1)<drop_insert_trip){
+                        can_continue = false; // Không thể xếp thêm khách, tạo drone mới
+                        num_drone++;
+                    }
                 }
                 else
                 {
                     can_continue = false; // Không thể xếp thêm khách, tạo drone mới
+                    num_drone++;
                 }
             }
             role++; // Tạo drone mới nếu cần
         }
+        // cout << "ok3" << endl;
 
         // **5️⃣ Lưu nghiệm hợp lệ**
         Solution sol(Route, Role);
+        sol.print();
         if (inserted.find(sol) == inserted.end())
             inserted.insert(sol);
     }
@@ -275,9 +286,12 @@ Solution Population::TNselection(int k){
 }
 
 Solution Population::crossover(Solution parent1, Solution parent2){
-    // cout << " Bắt đầu lai" << endl;
+    //cout << " Bắt đầu lai" << endl;
     vector<vector<int>> childRoute;
     vector<int> childRole;
+    
+    int num_truck = 0;
+    int num_drone = 0;
 
     unordered_set<int> S_all;
     unordered_set<int> S_role1;
@@ -291,6 +305,7 @@ Solution Population::crossover(Solution parent1, Solution parent2){
     unordered_set<int> Route_truck_parent1;
     unordered_set<int> Route_truck_parent2;
 
+   
     for (int i = 0; i < parent1.Role.size();i++){
         if (parent1.Role[i]!=0)
             break;
@@ -324,6 +339,8 @@ Solution Population::crossover(Solution parent1, Solution parent2){
         index++;
     }
 
+    //cout << "ok3" << endl;
+
     lastRole = 0;
     index = 0;
 
@@ -342,7 +359,7 @@ Solution Population::crossover(Solution parent1, Solution parent2){
         index++;
     }
 
-    // cout << "Khởi tạo xong " << endl;
+    //cout << "Khởi tạo xong " << endl;
 
     int k = Route_truck_parent1.size()>1? getRandomNumber(1, Route_truck_parent1.size() - 1):1;
     unordered_set<int> chosen;
@@ -361,6 +378,7 @@ Solution Population::crossover(Solution parent1, Solution parent2){
             }
             //cout << endl;
             childRole.push_back(0);
+            num_truck++;
             // cout << "thêm ";
             // for(int j : childRoute.back()){
             //     cout << j << " ";
@@ -397,11 +415,14 @@ Solution Population::crossover(Solution parent1, Solution parent2){
                     // cout << childRole.back() << endl;
                 }
                 lastRole++;
+                num_drone++;
             }
         }
     }
     // cout << "thêm drone từ cha xong" << endl;
     for(int id: Route_truck_parent2){
+        if(num_truck>=max_truck)
+            break;
         bool flag = true;
         //cout << "S đang có: ";
         for(int x : S_all){
@@ -434,6 +455,8 @@ Solution Population::crossover(Solution parent1, Solution parent2){
     
     if(Set_Trip_Role_parent2.size()>1){
     for (int index_set = 1; index_set < Set_Trip_Role_parent2.size();index_set++){
+        if(num_drone>=max_drone)
+            break;
         bool flag = true;
         for(int r : Set_Trip_Role_parent2[index_set]){
             for(int cus : parent2.Route[r]){
@@ -464,6 +487,8 @@ Solution Population::crossover(Solution parent1, Solution parent2){
     }
     }
     // cout << "thêm drone từ mẹ xong" << endl;
+
+    vector<int> childMark(childRoute.size(),1);
     int index_child_trip = 0;
     for (; index_child_trip < childRoute.size(); index_child_trip++)
     {
@@ -477,6 +502,7 @@ Solution Population::crossover(Solution parent1, Solution parent2){
             if(checkInsertNext(trip,x,childRole[index_child_trip],now)){
                 trip.push_back(x);
                 todelete.push_back(x);
+                childMark[index_child_trip] = 0;
             }
         }
         trip.push_back(0);
@@ -513,6 +539,7 @@ Solution Population::crossover(Solution parent1, Solution parent2){
             {
                 trip.push_back(x);
                 todelete.push_back(x);
+                childMark[index_child_trip] = 0;
             }
         }
         trip.push_back(0);
@@ -535,10 +562,12 @@ Solution Population::crossover(Solution parent1, Solution parent2){
     now = 0;
     lastRole++;
     //cout << num_Custom - S_all.size() << min_custom_serve << endl;
-    while(num_Custom-S_all.size() < min_custom_serve){
+    while((num_drone<max_drone||num_truck<max_truck)&&!S_all.empty()){
+        if(getRandomDouble(0,1)<drop_insert_trip) break;
         int choose = getRandomNumber(0, 1);
         //cout << choose << endl;
-        if(choose == 0){
+        if (choose == 0 && num_truck < max_truck)
+        {
             //cout << "thêm truck" << endl;
             vector<int> truck_trip;
             truck_trip.push_back(0);
@@ -552,12 +581,15 @@ Solution Population::crossover(Solution parent1, Solution parent2){
             truck_trip.push_back(0);
             childRoute.push_back(truck_trip);
             childRole.push_back(0);
+            num_truck++;
             for(int v: todelete){
                 S_all.erase(v);
                 S_role1.erase(v);
             }
         }
         else{
+
+            if(num_drone<max_drone){
             //cout << " bây giờ " << now << endl;
             bool can_insert = false;
             vector<int> drone_trip;
@@ -601,13 +633,16 @@ Solution Population::crossover(Solution parent1, Solution parent2){
                 }
             }
             else{
+                num_drone++;
                 lastRole++;
                 now = 0;                
             }
         }
+        }
+        childMark.push_back(0);
     }
 
-    return Solution(childRoute, childRole);
+    return Solution(childRoute, childRole,childMark);
 }
 
 Solution Population::mutate(Solution parents, double mutation_rate){
@@ -619,6 +654,7 @@ Solution Population::mutate(Solution parents, double mutation_rate){
     vector<unordered_set<int>> Set_Trip_Role_parent(1);
     auto childRoute = parents.Route;
     auto childRole = parents.Role;
+    auto childMark = parents.Mark;
 
     int index = 0;
 
@@ -640,22 +676,9 @@ Solution Population::mutate(Solution parents, double mutation_rate){
 
     while(mutate == false){
         
-        int choose = getRandomNumber(0, 4);
+        int choose = getRandomNumber(1, 4);
         //cout << "choose: " << choose << endl;
-        if (choose == 0)
-        { // đảo
-            // cout << "mutate đảo" << endl;
-            int route_reverse = getRandomNumber(0, childRoute.size() - 1);
-            if (childRoute[route_reverse].size() > 3)
-            {
-                int l = getRandomNumber(1, childRoute[route_reverse].size() - 3);
-                int r = getRandomNumber(l + 1, childRoute[route_reverse].size() - 2);
-                mutate = true;
-                reverse(childRoute[route_reverse].begin() + l, childRoute[route_reverse].begin() + r + 1);
-            }
-        
-    }
-    else if(choose == 1){//bớt chỗ này thêm chỗ khác
+        if(choose == 1){//bớt chỗ này thêm chỗ khác
         // cout << "mutate đổi" << endl;
         if(Set_Trip_Role_parent.size()==1) continue;
         int role_choose1 = getRandomNumber(0, Set_Trip_Role_parent.size()-1);
@@ -676,6 +699,7 @@ Solution Population::mutate(Solution parents, double mutation_rate){
         int insertPos = getRandomNumber(1, childRoute[id1].size() - 1);
         childRoute[id1].insert(childRoute[id1].begin() + insertPos, childRoute[id2][v]);
         childRoute[id2].erase(childRoute[id2].begin() + v);
+        childMark[id1] = childMark[id2] = 0;
         mutate = true;
     }
 
@@ -693,17 +717,21 @@ Solution Population::mutate(Solution parents, double mutation_rate){
         id1 = *it1;
         //cout << id1 << " "  << endl;
         //cout << childRole[id1] << endl;
+        if (role_choose1 != 0 && role_choose2==0){
+            if(parents.num_truck+1>max_truck) continue;
+        }
 
-        childRole[id1] = role_choose2;
-        //cout << childRole[id1] << endl;
+            childRole[id1] = role_choose2;
+            childMark[id1] = 0;
+            // cout << childRole[id1] << endl;
 
-        //cout << "sau mutate" << endl;
-        // for (int b = 0; b < childRoute.size();b++){
-        //     for (int c = 0; c < childRoute[b].size();c++){
-        //         cout << childRoute[b][c] << " ";
-        //     }
-        //     cout << childRole[b] << endl;
-        // }
+            // cout << "sau mutate" << endl;
+            //  for (int b = 0; b < childRoute.size();b++){
+            //      for (int c = 0; c < childRoute[b].size();c++){
+            //          cout << childRoute[b][c] << " ";
+            //      }
+            //      cout << childRole[b] << endl;
+            //  }
 
             mutate = true;
     }
@@ -711,9 +739,16 @@ Solution Population::mutate(Solution parents, double mutation_rate){
         // cout << "mutate nối cùng" << endl;
         // if (Set_Trip_Role_parent.size() < 2) continue;
         int role_choose1 = getRandomNumber(0, Set_Trip_Role_parent.size() - 1);
-        // cout << "role: " << role_choose1 << endl;
-        if (Set_Trip_Role_parent[role_choose1].size()<2) continue;
-            int id1 = getRandomNumber(0, Set_Trip_Role_parent[role_choose1].size() - 1);
+        if (role_choose1!=0){
+            for (int trip : Set_Trip_Role_parent[role_choose1])
+            {
+                childMark[trip] = 0;
+            }
+        }
+            // cout << "role: " << role_choose1 << endl;
+        if (Set_Trip_Role_parent[role_choose1].size() < 2)
+                continue;
+        int id1 = getRandomNumber(0, Set_Trip_Role_parent[role_choose1].size() - 1);
         int id2 = getRandomNumber(0, Set_Trip_Role_parent[role_choose1].size() - 1);
         // cout << "id1 " << id1 << " id2 " << id2 << endl;
         while(id2 == id1){
@@ -749,11 +784,14 @@ Solution Population::mutate(Solution parents, double mutation_rate){
         }
         childRoute.erase(childRoute.begin() + id2);
         childRole.erase(childRole.begin() + id2);
+        childMark.erase(childMark.begin() + id2);
         childRoute.erase(childRoute.begin() + id1);
         childRole.erase(childRole.begin() + id1);
+        childMark.erase(childMark.begin() + id1);
 
         childRoute.push_back(temp);
         childRole.push_back(role_choose1);
+        childMark.push_back(0);
 
         mutate = true;
     }
@@ -769,6 +807,21 @@ Solution Population::mutate(Solution parents, double mutation_rate){
         {
             role_choose2 = getRandomNumber(0, Set_Trip_Role_parent.size() - 1);
         }
+        if (role_choose1 != 0)
+        {
+            for (int trip : Set_Trip_Role_parent[role_choose1])
+            {
+                childMark[trip] = 0;
+            }
+        }
+        if (role_choose2 != 0)
+        {
+            for (int trip : Set_Trip_Role_parent[role_choose2])
+            {
+                childMark[trip] = 0;
+            }
+        }
+
         int id1 = getRandomNumber(0, Set_Trip_Role_parent[role_choose1].size() - 1);
         int id2 = getRandomNumber(0, Set_Trip_Role_parent[role_choose2].size() - 1);
         auto it1 = next(Set_Trip_Role_parent[role_choose1].begin(), id1);
@@ -801,11 +854,15 @@ Solution Population::mutate(Solution parents, double mutation_rate){
         }
         childRoute.erase(childRoute.begin() + id2);
         childRole.erase(childRole.begin() + id2);
+        childMark.erase(childMark.begin() + id2);
+
         childRoute.erase(childRoute.begin() + id1);
         childRole.erase(childRole.begin() + id1);
+        childMark.erase(childMark.begin() + id1);
 
         childRoute.push_back(temp);
         childRole.push_back(role_choose1<role_choose2? role_choose1: role_choose2);
+        childMark.push_back(0);
         mutate = true;
     }
     //cout << " đang mutate :" << mutate << endl;
@@ -822,7 +879,7 @@ Solution Population::mutate(Solution parents, double mutation_rate){
     // }
 
     mutate = true;
-    return Solution(childRoute, childRole);
+    return Solution(childRoute, childRole,childMark);
 }
 void Population::create_next_member(){
     vector<Solution> next_member;

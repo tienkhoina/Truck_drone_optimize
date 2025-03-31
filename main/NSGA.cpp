@@ -19,13 +19,13 @@ void NSGA_II<T1, T2>::NSGA_II_Genetic(double mutation_rate, int stagnation)
             T2 parent1 = population.TNselection();
             T2 parent2 = population.TNselection();
 
+
             T2 child1 = population.crossover(parent1, parent2);
             T2 child2 = population.crossover(parent2, parent1);
-            
+
 
             child1 = population.mutate(child1, mutation_rate);
             child2 = population.mutate(child2, mutation_rate);
-
 
             Child.push_back(child1);
             Child.push_back(child2);
