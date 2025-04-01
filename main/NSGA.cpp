@@ -36,6 +36,7 @@ void NSGA_II<T1, T2>::NSGA_II_Genetic(double mutation_rate, int stagnation)
             population.Mem.push_back(x);
         }
 
+        population.removeSame();
         population.sort_by_domination_crowdingdistance();
         population.create_next_member();
     }

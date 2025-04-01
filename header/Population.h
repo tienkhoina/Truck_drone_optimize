@@ -20,6 +20,7 @@ public:
     Solution crossover(Solution parent1, Solution parent2);
     Solution mutate(Solution parents, double mutation_rate);
     Solution SelectByParent1(Solution parent1);
+    void removeSame();
     void create_next_member();
     void Genetic(string Method, double mutation_rate, int stagnation);
 };

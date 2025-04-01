@@ -191,6 +191,12 @@ void Population::sort_by_domination_crowdingdistance(){
             F[0].push_back(i);
         }
     }
+    vector<pair<int, double>> P;
+    for (int i : F[0])
+    {
+        P.push_back({Mem[i].f1, Mem[i].f2});
+    }
+    pareto_front_in_generation.push_back(P);
 
     int i = 0;
     while (i < F.size() && !F[i].empty())
@@ -265,12 +271,18 @@ void Population::sort_by_domination_crowdingdistance(){
     }
 
     // Sắp xếp `Mem` theo rank trước, crowding distance sau
+    // cout << "Trước khi sắp xếp :" << endl;
+    // for(auto u : Mem)
+    //     u.print();
     sort(Mem.begin(), Mem.end(), [&](const Solution &a, const Solution &b)
          {
              if (rank[a] != rank[b])
                  return rank[a] < rank[b];                       // Ưu tiên rank thấp hơn
              return crowding_distance[a] > crowding_distance[b]; // Nếu cùng rank, ưu tiên crowding distance lớn hơn
          });
+    // cout << "sau khi sắp xếp :" << endl;
+    // for (auto u : Mem)
+    //     u.print();
 }
 
 Solution Population::TNselection(int k){
@@ -286,7 +298,12 @@ Solution Population::TNselection(int k){
 }
 
 Solution Population::crossover(Solution parent1, Solution parent2){
-    //cout << " Bắt đầu lai" << endl;
+
+    // //cout << " Bắt đầu lai" << endl;
+    // cout << "cha: " << endl;
+    // parent1.print();
+    // cout << "mẹ: " << endl;
+    // parent2.print();
     vector<vector<int>> childRoute;
     vector<int> childRole;
     
@@ -388,52 +405,54 @@ Solution Population::crossover(Solution parent1, Solution parent2){
     }
     // cout << "Thêm truck từ cha xong" <<endl;
     lastRole = 1;
-    if (Set_Trip_Role_parent1.size() > 1)
-    {
-        int h = getRandomNumber(1, Set_Trip_Role_parent1.size() - 1);
-        unordered_set<int> ch;
-        while (ch.size() < h)
+    
+        if (Set_Trip_Role_parent1.size() > 1)
         {
-            int id = getRandomNumber(1, Set_Trip_Role_parent1.size() - 1);
-            if (ch.find(id) == ch.end())
+            int h = getRandomNumber(1, Set_Trip_Role_parent1.size() - 1);
+            unordered_set<int> ch;
+            while (ch.size() < h)
             {
-                ch.insert(id);
-                for (int r : Set_Trip_Role_parent1[id])
+                int id = getRandomNumber(1, Set_Trip_Role_parent1.size() - 1);
+                if (ch.find(id) == ch.end())
                 {
-                    childRoute.push_back(parent1.Route[r]);
-                    childRole.push_back(lastRole);
-
-                    for (int R : parent1.Route[r])
+                    ch.insert(id);
+                    for (int r : Set_Trip_Role_parent1[id])
                     {
-                        S_all.erase(R);
+                        childRoute.push_back(parent1.Route[r]);
+                        childRole.push_back(lastRole);
+
+                        for (int R : parent1.Route[r])
+                        {
+                            S_all.erase(R);
+                        }
+                        // cout << "thêm ";
+                        // for (int j : childRoute.back())
+                        // {
+                        //     cout << j << " ";
+                        // }
+                        // cout << childRole.back() << endl;
                     }
-                    // cout << "thêm ";
-                    // for (int j : childRoute.back())
-                    // {
-                    //     cout << j << " ";
-                    // }
-                    // cout << childRole.back() << endl;
+                    lastRole++;
+                    num_drone++;
                 }
-                lastRole++;
-                num_drone++;
             }
         }
-    }
     // cout << "thêm drone từ cha xong" << endl;
     for(int id: Route_truck_parent2){
         if(num_truck>=max_truck)
             break;
         bool flag = true;
-        //cout << "S đang có: ";
-        for(int x : S_all){
-            //cout << x << " ";
-        //cout << endl;
+        // cout << "S đang có: ";
+        // for(int x : S_all){
+        //     cout << x << " ";
+        // cout << endl;
+        // }
         for(int v : parent2.Route[id]){
             if(S_all.find(v)==S_all.end() && v!=0){
                 flag = false;
             }
         }
-    }
+    
         //cout << flag << endl;
         if(flag){
             childRoute.push_back(parent2.Route[id]);
@@ -442,6 +461,7 @@ Solution Population::crossover(Solution parent1, Solution parent2){
                 S_all.erase(v);
                 S_role1.erase(v);
             }
+            num_truck++;
             // cout << "thêm ";
             // for (int j : childRoute.back())
             // {
@@ -475,6 +495,7 @@ Solution Population::crossover(Solution parent1, Solution parent2){
                     S_all.erase(cus);
                 }
                 childRole.push_back(lastRole);
+                num_drone++;
             }
             // cout << "thêm ";
             // for (int j : childRoute.back())
@@ -482,7 +503,7 @@ Solution Population::crossover(Solution parent1, Solution parent2){
             //     cout << j << " ";
             // }
             // cout << childRole.back() << endl;
-            // lastRole++;
+            lastRole++;
         }
     }
     }
@@ -518,7 +539,7 @@ Solution Population::crossover(Solution parent1, Solution parent2){
             S_role1.erase(y);
         }
     }
-    //cout << "chèn xong truck con " << endl;
+    // cout << "chèn xong truck con " << endl;
     lastRole = 0;
     int now = 0;
     
@@ -557,7 +578,7 @@ Solution Population::crossover(Solution parent1, Solution parent2){
             S_role1.erase(y);
         }
     }
-    //cout << "chèn xong drone con" << endl;
+    // cout << "chèn xong drone con" << endl;
 
     now = 0;
     lastRole++;
@@ -576,6 +597,8 @@ Solution Population::crossover(Solution parent1, Solution parent2){
                 if(checkInsertNext(truck_trip,v,0,0)){
                     truck_trip.push_back(v);
                     todelete.push_back(v);
+                    if(getRandomDouble(0,1)<drop_insert_custom)
+                        break;
                 }
             }
             truck_trip.push_back(0);
@@ -612,6 +635,8 @@ Solution Population::crossover(Solution parent1, Solution parent2){
                     {
                         drone_trip.push_back(v);
                         todelete.push_back(v);
+                        if(getRandomDouble(0,1)<drop_insert_custom)
+                            break;
                     }
                     
                 }
@@ -631,6 +656,7 @@ Solution Population::crossover(Solution parent1, Solution parent2){
                     S_all.erase(v);
                     S_role1.erase(v);
                 }
+                    
             }
             else{
                 num_drone++;
@@ -649,224 +675,242 @@ Solution Population::mutate(Solution parents, double mutation_rate){
     if (getRandomDouble(0, 1) >= mutation_rate)
         return parents;
     // cout << " bị mutate " << endl;
-    int lastRole = 0;
-    bool mutate = false;
-    vector<unordered_set<int>> Set_Trip_Role_parent(1);
+    // parents.print();
+    // int lastRole = 0;
+    // bool mutate = false;
+    // vector<unordered_set<int>> Set_Trip_Role_parent(1);
     auto childRoute = parents.Route;
     auto childRole = parents.Role;
     auto childMark = parents.Mark;
 
-    int index = 0;
+    int id = getRandomNumber(0, childRole.size() - 1);
 
-    while (index < parents.Role.size())
-    {
-        
-        if (parents.Role[index] == lastRole)
-        {
-            Set_Trip_Role_parent[lastRole].insert(index);
-        }
-        else
-        {
-            Set_Trip_Role_parent.resize(Set_Trip_Role_parent.size() + 1);
-            lastRole = parents.Role[index];
-            Set_Trip_Role_parent[lastRole].insert(index);
-        }
-        index++;
-    }
+    while (childRoute[id].size() < 4) id = getRandomNumber(0, childRole.size() - 1);
 
-    while(mutate == false){
+    int erId = getRandomNumber(1, childRoute[id].size() - 2);
+
+    childRoute[id].erase(childRoute[id].begin() + erId);
+    childMark[id] = 0;
+    Solution child(childRoute, childRole, childMark);
+    // child.print();
+    return child;
+
+    // int index = 0;
+    // int Tryindex = 0;
+
+    // do{
+    // while (index < parents.Role.size())
+    // {
         
-        int choose = getRandomNumber(1, 4);
+    //     if (parents.Role[index] == lastRole)
+    //     {
+    //         Set_Trip_Role_parent[lastRole].insert(index);
+    //     }
+    //     else
+    //     {
+    //         Set_Trip_Role_parent.resize(Set_Trip_Role_parent.size() + 1);
+    //         lastRole = parents.Role[index];
+    //         Set_Trip_Role_parent[lastRole].insert(index);
+    //     }
+    //     index++;
+    // }
+
+    // while(mutate == false){
+        
+    //     int choose = getRandomNumber(2, 2);
         //cout << "choose: " << choose << endl;
-        if(choose == 1){//bớt chỗ này thêm chỗ khác
-        // cout << "mutate đổi" << endl;
-        if(Set_Trip_Role_parent.size()==1) continue;
-        int role_choose1 = getRandomNumber(0, Set_Trip_Role_parent.size()-1);
-        int role_choose2 = getRandomNumber(0, Set_Trip_Role_parent.size() - 1);
-        while(role_choose2 == role_choose1 && role_choose1!=0){
-            role_choose2 = getRandomNumber(0, Set_Trip_Role_parent.size() - 1);
-        }
-        int id1 = getRandomNumber(0, Set_Trip_Role_parent[role_choose1].size() - 1);
-        auto it1 = next(Set_Trip_Role_parent[role_choose1].begin(), id1);
-        id1 = *it1;
-        int id2 = getRandomNumber(0, Set_Trip_Role_parent[role_choose2].size() - 1);
-        auto it2 = next(Set_Trip_Role_parent[role_choose2].begin(), id2);
-        id2 = *it2;
+    //     if(choose == 1){//bớt chỗ này thêm chỗ khác
+    //     cout << "mutate đổi" << endl;
+    //     if(Set_Trip_Role_parent.size()==1) continue;
+    //     int role_choose1 = getRandomNumber(0, Set_Trip_Role_parent.size()-1);
+    //     int role_choose2 = getRandomNumber(0, Set_Trip_Role_parent.size() - 1);
+    //     while(role_choose2 == role_choose1 && role_choose1!=0){
+    //         role_choose2 = getRandomNumber(0, Set_Trip_Role_parent.size() - 1);
+    //     }
+    //     int id1 = getRandomNumber(0, Set_Trip_Role_parent[role_choose1].size() - 1);
+    //     auto it1 = next(Set_Trip_Role_parent[role_choose1].begin(), id1);
+    //     id1 = *it1;
+    //     int id2 = getRandomNumber(0, Set_Trip_Role_parent[role_choose2].size() - 1);
+    //     auto it2 = next(Set_Trip_Role_parent[role_choose2].begin(), id2);
+    //     id2 = *it2;
 
-        if(childRoute[id2].size() < 4) continue;
+    //     if(childRoute[id2].size() < 4) continue;
 
-        int v = getRandomNumber(1, childRoute[id2].size() - 2);
-        int insertPos = getRandomNumber(1, childRoute[id1].size() - 1);
-        childRoute[id1].insert(childRoute[id1].begin() + insertPos, childRoute[id2][v]);
-        childRoute[id2].erase(childRoute[id2].begin() + v);
-        childMark[id1] = childMark[id2] = 0;
-        mutate = true;
-    }
+    //     int v = getRandomNumber(1, childRoute[id2].size() - 2);
+    //     int insertPos = getRandomNumber(1, childRoute[id1].size() - 1);
+    //     childRoute[id1].insert(childRoute[id1].begin() + insertPos, childRoute[id2][v]);
+    //     childRoute[id2].erase(childRoute[id2].begin() + v);
+    //     childMark[id1] = childMark[id2] = 0;
+    //     mutate = true;
+    // }
 
-    else if(choose == 2){// thay role
-        // cout << "mutate thay role" << endl;
-        int role_choose1 = getRandomNumber(0, Set_Trip_Role_parent.size() - 1);
-        int role_choose2 = getRandomNumber(0, Set_Trip_Role_parent.size() - 1);
-        //cout << role_choose1 << " " << role_choose2 << endl;
-        while (role_choose2 == role_choose1 && role_choose1 != 0)
-        {
-            role_choose2 = getRandomNumber(0, Set_Trip_Role_parent.size() - 1);
-        }
-        int id1 = getRandomNumber(0, Set_Trip_Role_parent[role_choose1].size() - 1);
-        auto it1 = next(Set_Trip_Role_parent[role_choose1].begin(), id1);
-        id1 = *it1;
-        //cout << id1 << " "  << endl;
-        //cout << childRole[id1] << endl;
-        if (role_choose1 != 0 && role_choose2==0){
-            if(parents.num_truck+1>max_truck) continue;
-        }
+    // else
+    //  if(choose == 2){// thay role
+    //     cout << "mutate thay role" << endl;
+    //     int role_choose1 = getRandomNumber(0, Set_Trip_Role_parent.size() - 1);
+    //     int role_choose2 = getRandomNumber(0, Set_Trip_Role_parent.size() - 1);
+    //     //cout << role_choose1 << " " << role_choose2 << endl;
+    //     while (role_choose2 == role_choose1 && role_choose1 != 0)
+    //     {
+    //         role_choose2 = getRandomNumber(0, Set_Trip_Role_parent.size() - 1);
+    //     }
+    //     int id1 = getRandomNumber(0, Set_Trip_Role_parent[role_choose1].size() - 1);
+    //     auto it1 = next(Set_Trip_Role_parent[role_choose1].begin(), id1);
+    //     id1 = *it1;
+    //     //cout << id1 << " "  << endl;
+    //     //cout << childRole[id1] << endl;
+    //     if (role_choose1 != 0 && role_choose2==0){
+    //         if(parents.num_truck+1>max_truck) continue;
+    //     }
 
-            childRole[id1] = role_choose2;
-            childMark[id1] = 0;
-            // cout << childRole[id1] << endl;
+    //         childRole[id1] = role_choose2;
+    //         childMark[id1] = 0;
+    //         // cout << childRole[id1] << endl;
 
-            // cout << "sau mutate" << endl;
-            //  for (int b = 0; b < childRoute.size();b++){
-            //      for (int c = 0; c < childRoute[b].size();c++){
-            //          cout << childRoute[b][c] << " ";
-            //      }
-            //      cout << childRole[b] << endl;
-            //  }
+    //         // cout << "sau mutate" << endl;
+    //         //  for (int b = 0; b < childRoute.size();b++){
+    //         //      for (int c = 0; c < childRoute[b].size();c++){
+    //         //          cout << childRoute[b][c] << " ";
+    //         //      }
+    //         //      cout << childRole[b] << endl;
+    //         //  }
 
-            mutate = true;
-    }
-    else if(choose == 3){// nối cùng role
-        // cout << "mutate nối cùng" << endl;
-        // if (Set_Trip_Role_parent.size() < 2) continue;
-        int role_choose1 = getRandomNumber(0, Set_Trip_Role_parent.size() - 1);
-        if (role_choose1!=0){
-            for (int trip : Set_Trip_Role_parent[role_choose1])
-            {
-                childMark[trip] = 0;
-            }
-        }
-            // cout << "role: " << role_choose1 << endl;
-        if (Set_Trip_Role_parent[role_choose1].size() < 2)
-                continue;
-        int id1 = getRandomNumber(0, Set_Trip_Role_parent[role_choose1].size() - 1);
-        int id2 = getRandomNumber(0, Set_Trip_Role_parent[role_choose1].size() - 1);
-        // cout << "id1 " << id1 << " id2 " << id2 << endl;
-        while(id2 == id1){
+    //         mutate = true;
+    // }
+    // else if(choose == 3){// nối cùng role
+    //     cout << "mutate nối cùng" << endl;
+    //     // if (Set_Trip_Role_parent.size() < 2) continue;
+    //     int role_choose1 = getRandomNumber(0, Set_Trip_Role_parent.size() - 1);
+    //     if (role_choose1!=0){
+    //         for (int trip : Set_Trip_Role_parent[role_choose1])
+    //         {
+    //             childMark[trip] = 0;
+    //         }
+    //     }
+    //         // cout << "role: " << role_choose1 << endl;
+    //     if (Set_Trip_Role_parent[role_choose1].size() < 2)
+    //             continue;
+    //     int id1 = getRandomNumber(0, Set_Trip_Role_parent[role_choose1].size() - 1);
+    //     int id2 = getRandomNumber(0, Set_Trip_Role_parent[role_choose1].size() - 1);
+    //     // cout << "id1 " << id1 << " id2 " << id2 << endl;
+    //     while(id2 == id1){
 
-            id2 = getRandomNumber(0, Set_Trip_Role_parent[role_choose1].size() - 1);
-        }
-        auto it1 = next(Set_Trip_Role_parent[role_choose1].begin(), id1);
-        id1 = *it1;
-        auto it2 = next(Set_Trip_Role_parent[role_choose1].begin(), id2);
-        id2 = *it2;
+    //         id2 = getRandomNumber(0, Set_Trip_Role_parent[role_choose1].size() - 1);
+    //     }
+    //     auto it1 = next(Set_Trip_Role_parent[role_choose1].begin(), id1);
+    //     id1 = *it1;
+    //     auto it2 = next(Set_Trip_Role_parent[role_choose1].begin(), id2);
+    //     id2 = *it2;
 
-        // cout << "id1 "<<id1 << " id2 " <<id2<< endl;
+    //     // cout << "id1 "<<id1 << " id2 " <<id2<< endl;
 
-        vector<int> temp;
-        temp.push_back(0);
-        for (int i = 1; i < childRoute[id1].size()-1;++i){
-            temp.push_back(childRoute[id1][i]);
-        }
-        for (int i = 1; i < childRoute[id2].size() - 1; ++i)
-        {
-            temp.push_back(childRoute[id2][i]);
-        }
-        temp.push_back(0);
+    //     vector<int> temp;
+    //     temp.push_back(0);
+    //     for (int i = 1; i < childRoute[id1].size()-1;++i){
+    //         temp.push_back(childRoute[id1][i]);
+    //     }
+    //     for (int i = 1; i < childRoute[id2].size() - 1; ++i)
+    //     {
+    //         temp.push_back(childRoute[id2][i]);
+    //     }
+    //     temp.push_back(0);
 
-        // cout << " sau nối: ";
-        // for(int x: temp)
-        //     cout << x << " ";
-        // cout << endl;
+    //     // cout << " sau nối: ";
+    //     // for(int x: temp)
+    //     //     cout << x << " ";
+    //     // cout << endl;
 
-        if (id1 > id2)
-        {
-            swap(id1, id2); // Đảm bảo xóa theo thứ tự đúng
-        }
-        childRoute.erase(childRoute.begin() + id2);
-        childRole.erase(childRole.begin() + id2);
-        childMark.erase(childMark.begin() + id2);
-        childRoute.erase(childRoute.begin() + id1);
-        childRole.erase(childRole.begin() + id1);
-        childMark.erase(childMark.begin() + id1);
+    //     if (id1 > id2)
+    //     {
+    //         swap(id1, id2); // Đảm bảo xóa theo thứ tự đúng
+    //     }
+    //     childRoute.erase(childRoute.begin() + id2);
+    //     childRole.erase(childRole.begin() + id2);
+    //     childMark.erase(childMark.begin() + id2);
+    //     childRoute.erase(childRoute.begin() + id1);
+    //     childRole.erase(childRole.begin() + id1);
+    //     childMark.erase(childMark.begin() + id1);
 
-        childRoute.push_back(temp);
-        childRole.push_back(role_choose1);
-        childMark.push_back(0);
+    //     childRoute.push_back(temp);
+    //     childRole.push_back(role_choose1);
+    //     childMark.push_back(0);
 
-        mutate = true;
-    }
+    //     mutate = true;
+    // }
 
-    else
-    { // nối khác role
-        // cout << "mutate nối khác" << endl;
-        if (Set_Trip_Role_parent.size() < 2)
-            continue;
-        int role_choose1 = getRandomNumber(0, Set_Trip_Role_parent.size() - 1);
-        int role_choose2 = getRandomNumber(0, Set_Trip_Role_parent.size() - 1);
-        while (role_choose2 == role_choose1 && role_choose1 != 0)
-        {
-            role_choose2 = getRandomNumber(0, Set_Trip_Role_parent.size() - 1);
-        }
-        if (role_choose1 != 0)
-        {
-            for (int trip : Set_Trip_Role_parent[role_choose1])
-            {
-                childMark[trip] = 0;
-            }
-        }
-        if (role_choose2 != 0)
-        {
-            for (int trip : Set_Trip_Role_parent[role_choose2])
-            {
-                childMark[trip] = 0;
-            }
-        }
+    // else
+    // { // nối khác role
+    //     cout << "mutate nối khác" << endl;
+    //     if (Set_Trip_Role_parent.size() < 2)
+    //         continue;
+    //     int role_choose1 = getRandomNumber(0, Set_Trip_Role_parent.size() - 1);
+    //     int role_choose2 = getRandomNumber(0, Set_Trip_Role_parent.size() - 1);
+    //     while (role_choose2 == role_choose1 && role_choose1 != 0)
+    //     {
+    //         role_choose2 = getRandomNumber(0, Set_Trip_Role_parent.size() - 1);
+    //     }
+    //     if (role_choose1 != 0)
+    //     {
+    //         for (int trip : Set_Trip_Role_parent[role_choose1])
+    //         {
+    //             childMark[trip] = 0;
+    //         }
+    //     }
+    //     if (role_choose2 != 0)
+    //     {
+    //         for (int trip : Set_Trip_Role_parent[role_choose2])
+    //         {
+    //             childMark[trip] = 0;
+    //         }
+    //     }
 
-        int id1 = getRandomNumber(0, Set_Trip_Role_parent[role_choose1].size() - 1);
-        int id2 = getRandomNumber(0, Set_Trip_Role_parent[role_choose2].size() - 1);
-        auto it1 = next(Set_Trip_Role_parent[role_choose1].begin(), id1);
-        id1 = *it1;
-        auto it2 = next(Set_Trip_Role_parent[role_choose2].begin(), id2);
-        id2 = *it2;
+    //     int id1 = getRandomNumber(0, Set_Trip_Role_parent[role_choose1].size() - 1);
+    //     int id2 = getRandomNumber(0, Set_Trip_Role_parent[role_choose2].size() - 1);
+    //     auto it1 = next(Set_Trip_Role_parent[role_choose1].begin(), id1);
+    //     id1 = *it1;
+    //     auto it2 = next(Set_Trip_Role_parent[role_choose2].begin(), id2);
+    //     id2 = *it2;
 
-        vector<int> temp;
-        temp.push_back(0);
-        for (int i = 1; i < childRoute[id1].size() - 1; ++i)
-        {
-            temp.push_back(childRoute[id1][i]);
-        }
-        for (int i = 1; i < childRoute[id2].size() - 1; ++i)
-        {
-            temp.push_back(childRoute[id2][i]);
-        }
-        temp.push_back(0);
-        if (Set_Trip_Role_parent[role_choose2].size() == 1)
-        {
-            int index_big_role = *Set_Trip_Role_parent[role_choose2].begin();
-            for (int _z = index_big_role + 1; _z < childRole.size(); _z++){
-                childRole[_z]--;
-            }
-        }
+    //     vector<int> temp;
+    //     temp.push_back(0);
+    //     for (int i = 1; i < childRoute[id1].size() - 1; ++i)
+    //     {
+    //         temp.push_back(childRoute[id1][i]);
+    //     }
+    //     for (int i = 1; i < childRoute[id2].size() - 1; ++i)
+    //     {
+    //         temp.push_back(childRoute[id2][i]);
+    //     }
+    //     temp.push_back(0);
+    //     if (Set_Trip_Role_parent[role_choose2].size() == 1)
+    //     {
+    //         int index_big_role = *Set_Trip_Role_parent[role_choose2].begin();
+    //         for (int _z = index_big_role + 1; _z < childRole.size(); _z++){
+    //             childRole[_z]--;
+    //         }
+    //     }
 
-        if (id1 > id2)
-        {
-            swap(id1, id2); // Đảm bảo xóa theo thứ tự đúng
-        }
-        childRoute.erase(childRoute.begin() + id2);
-        childRole.erase(childRole.begin() + id2);
-        childMark.erase(childMark.begin() + id2);
+    //     if (id1 > id2)
+    //     {
+    //         swap(id1, id2); // Đảm bảo xóa theo thứ tự đúng
+    //     }
+    //     childRoute.erase(childRoute.begin() + id2);
+    //     childRole.erase(childRole.begin() + id2);
+    //     childMark.erase(childMark.begin() + id2);
 
-        childRoute.erase(childRoute.begin() + id1);
-        childRole.erase(childRole.begin() + id1);
-        childMark.erase(childMark.begin() + id1);
+    //     childRoute.erase(childRoute.begin() + id1);
+    //     childRole.erase(childRole.begin() + id1);
+    //     childMark.erase(childMark.begin() + id1);
 
-        childRoute.push_back(temp);
-        childRole.push_back(role_choose1<role_choose2? role_choose1: role_choose2);
-        childMark.push_back(0);
-        mutate = true;
-    }
+    //     childRoute.push_back(temp);
+    //     childRole.push_back(role_choose1<role_choose2? role_choose1: role_choose2);
+    //     childMark.push_back(0);
+    //     mutate = true;
+    // }
     //cout << " đang mutate :" << mutate << endl;
-    }
+    // }
+    // Tryindex++;
+    // mutate = false;
 
     //cout << "sau mutate" << endl;
     // for (int b = 0; b < childRoute.size(); b++)
@@ -877,18 +921,27 @@ Solution Population::mutate(Solution parents, double mutation_rate){
     //     }
     //     cout << childRole[b] << endl;
     // }
+    // } while (Tryindex < 5 && !checkValidSolution(childRoute,childRole));
 
-    mutate = true;
-    return Solution(childRoute, childRole,childMark);
+    // if (Tryindex < 15)
+    //     return Solution(childRoute, childRole, childMark);
+
+    // mutate = true;
+    // return parents;
 }
+
+void Population::removeSame()
+{
+    unordered_set<Solution> unique_members(Mem.begin(), Mem.end());
+    Mem.assign(unique_members.begin(), unique_members.end());
+}
+
 void Population::create_next_member(){
     vector<Solution> next_member;
-    for (int i = 0; i < size; i++)
-    {
+    for (int i = 0; i < size;i++){
         next_member.push_back(Mem[i]);
     }
     Mem = next_member;
-
 }
 
 Solution Population::SelectByParent1(Solution parent1){

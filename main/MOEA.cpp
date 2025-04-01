@@ -35,6 +35,7 @@ void MOEA<T1, T2>::MOEA_Genetic(double mutation_rate, int stagnation)
             population.Mem.push_back(x);
         }
 
+        population.removeSame();
         population.sort_by_domination_crowdingdistance();
         population.create_next_member();
     }

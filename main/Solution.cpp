@@ -109,7 +109,7 @@ Solution::Solution(vector<vector<int>> route, vector<int> role, vector<int> mark
             index++;
             continue;
         }
-        auto solut = solverTSPTWmapping(Route[index], Ex, k_Truck, 0.0);
+        auto solut = solverTSPTWmapping(Route[index], Ex, t_Truck, 0.0);
         //cout << "solution " << solut.first << endl;
         if(solut.first == -1){
             // cout << " không tìm được tối ưu" << endl;
@@ -144,10 +144,10 @@ Solution::Solution(vector<vector<int>> route, vector<int> role, vector<int> mark
             continue;
         }
         else{
-            auto solut = solverTSPTWmapping(Route[index], Ex, k_drone, now);
+            auto solut = solverTSPTWmapping(Route[index], Ex, t_drone, now);
             if(solut.first == -1){
                 if(now ==0)
-                    cout << " không tìm được tối ưu" << endl;
+                    cout << " không tìm được tối ưu" <<" " << int(checkValidVector(Route[index],Role[index],now)) << endl;
                 f1 = -1;
                 f2 = INT_MAX;
                 return;
@@ -270,18 +270,21 @@ Solution &Solution::operator=(const Solution &other)
 // So sánh nghiệm
 bool Solution::operator<(const Solution &other) const
 {
-    bool better_in_one = (f1 > other.f1) || (f2 < other.f2);
-    bool not_worse_in_all = (f1 >= other.f1) && (f2 <= other.f2);
-    return not_worse_in_all && better_in_one;
+    // Chỉ thống trị nếu nó không kém hơn về mọi mặt và tốt hơn ít nhất một mặt
+    return (f1 >= other.f1 && f2 <= other.f2 && (f1 > other.f1 || f2 < other.f2));
 }
 
-bool Solution::operator==(const Solution &other) const{
-    return Route == other.Route && Role == other.Role && Mark == other.Mark && f1 == other.f1 && f2 == other.f2 && num_drone == other.num_drone &&
-           num_truck == other.num_truck;
+bool Solution::operator==(const Solution &other) const
+{
+    return f1 == other.f1 &&
+           abs(f2 - other.f2) < 1e-6 && // Tránh lỗi số thực
+           num_drone == other.num_drone &&
+           num_truck == other.num_truck &&
+           Role == other.Role;
 }
 
 // In kết quả
-void Solution::print()
+void Solution::print() const
 {
     if (f1 == -1 || f2 == INT_MAX)
     {

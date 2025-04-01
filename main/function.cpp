@@ -2,6 +2,7 @@
 #include "function.h"
 #include "Constants.h"
 #include <set>
+#include <fstream>
 #include "TSPTW.h"
 
 
@@ -164,7 +165,7 @@ double jaccardSimilarity(const vector<vector<int>> &solutionA, const vector<vect
     double jaccardIndex = (double)intersectionSet.size() / unionSet.size();
     return jaccardIndex;
 }
-pair<int,vector<int>> solverTSPTWmapping(const vector<int> &Trip, const vector<vector<double>> &Ex, double k_trip,double start_time){
+pair<int,vector<int>> solverTSPTWmapping(const vector<int> &Trip, const vector<vector<double>> &ex, double t_trip,double start_time){
     ////////cout << "bắt đầu giải" << endl;
     int size = Trip.size() - 1;
     //////cout << size << endl;
@@ -185,7 +186,7 @@ pair<int,vector<int>> solverTSPTWmapping(const vector<int> &Trip, const vector<v
     {
         for (int j = 0; j <size; j++)
         {
-            map_cost[i][j] = k_trip * Ex[mapping[i]][mapping[j]];
+            map_cost[i][j] = t_trip * ex[mapping[i]][mapping[j]];
             //////cout << map_cost[i][j] << " ";
         }
         //////cout << endl;
@@ -208,6 +209,91 @@ pair<int,vector<int>> solverTSPTWmapping(const vector<int> &Trip, const vector<v
         return {solution.first, ReturnTrip};
     }
     else{
+        for (int i = 0; i < size; i++)
+        {
+            cout << i << " " << mapping[i] << endl;
+        }
+        for (int i = 0; i < size; i++)
+        {
+            cout << earliest[i] <<" "<< lastest[i] << endl;
+        }
+
+        for (int i = 0; i < size; i++)
+        {
+            for (int j = 0; j < size; j++)
+            {
+               
+                cout << map_cost[i][j] << " ";
+            }
+            cout << endl;
+        }
         return {-1, {}};
     }  
+}
+
+void printParetoFront(vector<vector<pair<int, double>>> &pr1, string file_path)
+{
+    ofstream file(file_path);
+    if (!file)
+    {
+        cerr << "Không thể mở file: " << file_path << endl;
+        return;
+    }
+
+    // In dữ liệu theo đúng định dạng yêu cầu
+    for (size_t i = 0; i < pr1.size(); ++i)
+    {
+        file<<"Thế hệ thứ: "<<"\n" << i << "\n"; // In chỉ mục của vector
+        for (const auto &[first, second] : pr1[i])
+        {
+            file << first << " " << second << "\n";
+        }
+    }
+
+    file.close();
+}
+
+bool checkValidSolution(vector<vector<int>> route, vector<int> role){
+    int n_truck=0;
+    int n_drone=0;
+
+    int index = 0;
+
+    // 🚛 Xử lý TRUCK (role = 0)
+    while (index < route.size() && role[index] == 0)
+    {
+        n_truck++;
+        
+        if(!checkValidVector(route[index],role[index],0))
+            return false;
+        index++;
+    }
+
+    int current_role = -1;
+    double now = 0;
+
+    while (index < route.size())
+    {
+        double weight = 0;
+        double useEnergy = 0;
+
+        if (current_role == role[index])
+        {
+            now = getTimeDroneTrip(route[index - 1], now);
+        }
+        else
+        {
+            current_role = role[index];
+            now = 0;
+            n_drone++;
+            // cout << "\n🚀 Drone " << num_drone << " bắt đầu từ 0 (role = " << current_role << ")\n";
+        }
+        if (!checkValidVector(route[index], role[index], now))
+            return false;
+        index++;
+    }
+    if(n_truck>max_truck||n_drone>max_drone)
+        return false;
+
+    return true;
 }

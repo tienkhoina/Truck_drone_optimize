@@ -24,16 +24,26 @@ public:
     Solution &operator=(const Solution &other);
     bool operator<(const Solution &other) const;
     bool operator==(const Solution &other) const;
-    void print();
+    void print() const;
 };
 namespace std
 {
     template <>
     struct hash<Solution>
     {
-        size_t operator()(const Solution &p) const
+        size_t operator()(const Solution &s) const
         {
-            return hash<int>()(p.f1) ^ (hash<size_t>()(static_cast<size_t>(p.f2 * 1000)) << 1);
+            size_t h = 0;
+            hash<int> int_hash;
+            hash<double> double_hash;
+
+            // Kết hợp băm của các thuộc tính quan trọng
+            h ^= int_hash(s.f1) + 0x9e3779b9 + (h << 6) + (h >> 2);
+            h ^= double_hash(s.f2) + 0x9e3779b9 + (h << 6) + (h >> 2);
+            h ^= int_hash(s.num_drone) + 0x9e3779b9 + (h << 6) + (h >> 2);
+            h ^= int_hash(s.num_truck) + 0x9e3779b9 + (h << 6) + (h >> 2);
+
+            return h;
         }
     };
 }

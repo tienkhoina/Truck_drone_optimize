@@ -1,6 +1,7 @@
 #include "Constants.h"
 #include "Population.h"
 #include <windows.h>
+#include "function.h"
 
 int main()
 {
@@ -41,11 +42,17 @@ int main()
         cout << endl;
     }
 
-    Population pop(num_Custom, 30);
+    Population pop(num_Custom, 50);
     for(auto m : pop.Mem)
         m.print();
-    pop.Genetic("NSGA_II", 0, 30);
-    pop.Mem[0].print();
-    
+
+    pop.Genetic("NSGA_II", 0.4, 30);
+
+    cout << "Ok" << endl;
+
+    for (int i = 0; i < 10;i++)
+        pop.Mem[i].print();
+
+    printParetoFront(pareto_front_in_generation, "D:\\Project GA new\\data\\Pareto1.txt");
     return 0;
 }
