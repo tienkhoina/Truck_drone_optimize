@@ -683,6 +683,8 @@ Solution Population::mutate(Solution parents, double mutation_rate){
     auto childRole = parents.Role;
     auto childMark = parents.Mark;
 
+    bool mutate = false;
+
     int id = getRandomNumber(0, childRole.size() - 1);
 
     while (childRoute[id].size() < 4) id = getRandomNumber(0, childRole.size() - 1);

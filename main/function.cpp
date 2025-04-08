@@ -243,7 +243,7 @@ void printParetoFront(vector<vector<pair<int, double>>> &pr1, string file_path)
     // In dữ liệu theo đúng định dạng yêu cầu
     for (size_t i = 0; i < pr1.size(); ++i)
     {
-        file<<"Thế hệ thứ: "<<"\n" << i << "\n"; // In chỉ mục của vector
+        file<<"Thế hệ thứ: " << i << "\n"; // In chỉ mục của vector
         for (const auto &[first, second] : pr1[i])
         {
             file << first << " " << second << "\n";

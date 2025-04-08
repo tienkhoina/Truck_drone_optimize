@@ -25,7 +25,7 @@ extern int min_custom_serve; // đánh giá số khách hàng ít nhất cần �
 extern int max_truck; // giới hạn số lượng xe tải
 extern int max_drone; // giới hạn số lượng drone
 extern double drop_insert_custom;// tỉ lệ drop out khi thêm khách hàng
-extern double drop_insert_trip;// tỉ lệ drop out khi thêm
+extern double drop_insert_trip;// tỉ lệ drop out khi thêm đường đi
 extern vector<vector<pair<int, double>>> pareto_front_in_generation;
 
 #endif // CONSTANTS_H
