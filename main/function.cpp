@@ -4,7 +4,7 @@
 #include <set>
 #include <fstream>
 #include "TSPTW.h"
-
+#include "Hamilton_path.h"
 
 random_device rd;
 mt19937 gen(rd());
@@ -21,52 +21,8 @@ double getRandomDouble(double a, double b)
     return dist(gen);
 }
 
-bool checkInsertNext(vector<int> x, int v, int roleId, double now){
-    vector<int> temp = x;
-    double weight=0;
-    temp.push_back(v);
-    if(Cus[v].role == 1 && roleId!=0)
-        return false;
-    if(roleId == 0){
-        for (int i = 0; i < temp.size()-1;i++){
-            now += t_Truck * Ex[temp[i]][temp[i + 1]];
-            if(now < Cus[temp[i+1]].start){
-                now = Cus[temp[i + 1]].start;
-            }
-            else if (now > Cus[temp[i + 1]].end){
-                return false;
-            }
-            weight += Cus[temp[i + 1]].weight;
-        }
-        if(weight > Max_Weight_Truck)
-            return false;
-    }
-    else{
-        double useEnergy = 0;
-        for (int i = 0; i < temp.size() - 1; i++)
-        {
-            now += t_drone * Ex[temp[i]][temp[i + 1]];
-
-            if (now < Cus[temp[i + 1]].start)
-            {
-                now = Cus[temp[i + 1]].start;
-            }
-            else if (now > Cus[temp[i + 1]].end)
-            {
-                return false;
-            }
-            weight += Cus[temp[i + 1]].weight;
-            useEnergy += en_drone * Ex[temp[i]][temp[i + 1]];
-        }
-        if (weight > Max_Weight_Drone)
-            return false;
-        if (useEnergy>Max_Energy)
-            return false;
-    }
-    return true;
-}
-
-bool checkValidVector(vector<int> x, int roleId, double now){
+bool checkValidVector(vector<int> x, int roleId, double now)
+{
     vector<int> temp = x;
     double weight = 0;
     if (roleId == 0)
@@ -93,7 +49,7 @@ bool checkValidVector(vector<int> x, int roleId, double now){
         double useEnergy = 0;
         for (int i = 0; i < temp.size() - 1; i++)
         {
-            if (Cus[temp[i + 1]].role==1)
+            if (Cus[temp[i + 1]].role == 1)
                 return false;
             now += t_drone * Ex[temp[i]][temp[i + 1]];
 
@@ -115,10 +71,72 @@ bool checkValidVector(vector<int> x, int roleId, double now){
     }
     return true;
 }
+bool checkInsertNext(vector<int> x, int v, int roleId, double now)
+{
+    // Tạo bản sao của vector và thêm phần tử mới
+    vector<int> temp = x;
+    temp.push_back(v);
 
-double getTimeDroneTrip(vector<int> x, double now){
+    double weight = 0;
+    double useEnergy = 0;
+
+    // Kiểm tra roleId
+    if (Cus[v].role == 1 && roleId != 0)
+        return false;
+
+    // Trường hợp Truck (roleId == 0)
+    if (roleId == 0)
+    {
+        for (int i = 0; i < temp.size() - 1; i++)
+        {
+            now += t_Truck * Ex[temp[i]][temp[i + 1]];
+            if (now < Cus[temp[i + 1]].start)
+            {
+                now = Cus[temp[i + 1]].start;
+            }
+            else if (now > Cus[temp[i + 1]].end)
+            {
+                return false;
+            }
+            weight += Cus[temp[i + 1]].weight;
+        }
+        if (weight > Max_Weight_Truck)
+            return false;
+    }
+    // Trường hợp Drone (roleId != 0)
+    else
+    {
+        for (int i = 0; i < temp.size() - 1; i++)
+        {
+            if (Cus[temp[i + 1]].role == 1)
+                return false;
+
+            now += t_drone * Ex[temp[i]][temp[i + 1]];
+            if (now < Cus[temp[i + 1]].start)
+            {
+                now = Cus[temp[i + 1]].start;
+            }
+            else if (now > Cus[temp[i + 1]].end)
+            {
+                return false;
+            }
+            weight += Cus[temp[i + 1]].weight;
+            useEnergy += en_drone * Ex[temp[i]][temp[i + 1]];
+        }
+        if (weight > Max_Weight_Drone)
+            return false;
+        if (useEnergy > Max_Energy)
+            return false;
+    }
+
+    return true;
+}
+
+double getTimeDroneTrip(vector<int> x, double now)
+{
     auto temp = x;
-    for (int i = 0; i < x.size() - 1; i++){
+    for (int i = 0; i < x.size() - 1; i++)
+    {
         now += t_drone * Ex[temp[i]][temp[i + 1]];
 
         if (now < Cus[temp[i + 1]].start)
@@ -165,7 +183,8 @@ double jaccardSimilarity(const vector<vector<int>> &solutionA, const vector<vect
     double jaccardIndex = (double)intersectionSet.size() / unionSet.size();
     return jaccardIndex;
 }
-pair<int,vector<int>> solverTSPTWmapping(const vector<int> &Trip, const vector<vector<double>> &ex, double t_trip,double start_time){
+pair<int, vector<int>> solverTSPTWmapping(const vector<int> &Trip, const vector<vector<double>> &ex, double t_trip, double start_time)
+{
     ////////cout << "bắt đầu giải" << endl;
     int size = Trip.size() - 1;
     //////cout << size << endl;
@@ -175,8 +194,9 @@ pair<int,vector<int>> solverTSPTWmapping(const vector<int> &Trip, const vector<v
     vector<double> lastest(size);
     vector<double> service_time(size, 0);
 
-    for (int i = 0; i < size ; i++){
-        
+    for (int i = 0; i < size; i++)
+    {
+
         mapping[i] = Trip[i];
         //////cout << mapping[i];
     }
@@ -184,51 +204,56 @@ pair<int,vector<int>> solverTSPTWmapping(const vector<int> &Trip, const vector<v
 
     for (int i = 0; i < size; i++)
     {
-        for (int j = 0; j <size; j++)
+        for (int j = 0; j < size; j++)
         {
             map_cost[i][j] = t_trip * ex[mapping[i]][mapping[j]];
             //////cout << map_cost[i][j] << " ";
         }
         //////cout << endl;
     }
-    
-    for (int i = 0; i < size; i++){
+
+    for (int i = 0; i < size; i++)
+    {
         earliest[i] = Cus[mapping[i]].start;
         lastest[i] = Cus[mapping[i]].end;
         //////cout << earliest[i] <<" "<< lastest[i] << endl;
     }
 
-    TSPTW tsptw(size-1, map_cost, earliest, lastest, service_time, start_time);
+    TSPTW tsptw(size - 1, map_cost, earliest, lastest, service_time, start_time);
     ////////cout << "tạo xong đối tượng";
     auto solution = tsptw.solve();
-    if(solution.first != -1){
+    if (solution.first != -1)
+    {
         vector<int> ReturnTrip;
-        for(int x: solution.second){
+        for (int x : solution.second)
+        {
             ReturnTrip.push_back(mapping[x]);
         }
         return {solution.first, ReturnTrip};
     }
-    else{
+    else
+    {
         for (int i = 0; i < size; i++)
         {
             cout << i << " " << mapping[i] << endl;
         }
+        cout << "time " << start_time << endl;
         for (int i = 0; i < size; i++)
         {
-            cout << earliest[i] <<" "<< lastest[i] << endl;
+            cout << earliest[i] << " " << lastest[i] << endl;
         }
 
         for (int i = 0; i < size; i++)
         {
             for (int j = 0; j < size; j++)
             {
-               
+
                 cout << map_cost[i][j] << " ";
             }
             cout << endl;
         }
         return {-1, {}};
-    }  
+    }
 }
 
 void printParetoFront(vector<vector<pair<int, double>>> &pr1, string file_path)
@@ -243,7 +268,7 @@ void printParetoFront(vector<vector<pair<int, double>>> &pr1, string file_path)
     // In dữ liệu theo đúng định dạng yêu cầu
     for (size_t i = 0; i < pr1.size(); ++i)
     {
-        file<<"Thế hệ thứ: " << i << "\n"; // In chỉ mục của vector
+        file << "Thế hệ thứ: " << i << "\n"; // In chỉ mục của vector
         for (const auto &[first, second] : pr1[i])
         {
             file << first << " " << second << "\n";
@@ -253,9 +278,10 @@ void printParetoFront(vector<vector<pair<int, double>>> &pr1, string file_path)
     file.close();
 }
 
-bool checkValidSolution(vector<vector<int>> route, vector<int> role){
-    int n_truck=0;
-    int n_drone=0;
+bool checkValidSolution(vector<vector<int>> route, vector<int> role)
+{
+    int n_truck = 0;
+    int n_drone = 0;
 
     int index = 0;
 
@@ -263,8 +289,8 @@ bool checkValidSolution(vector<vector<int>> route, vector<int> role){
     while (index < route.size() && role[index] == 0)
     {
         n_truck++;
-        
-        if(!checkValidVector(route[index],role[index],0))
+
+        if (!checkValidVector(route[index], role[index], 0))
             return false;
         index++;
     }
@@ -292,8 +318,138 @@ bool checkValidSolution(vector<vector<int>> route, vector<int> role){
             return false;
         index++;
     }
-    if(n_truck>max_truck||n_drone>max_drone)
+    if (n_truck > max_truck || n_drone > max_drone)
         return false;
 
     return true;
+}
+pair<int, vector<int>> solverTSPTWmappingLarge(const vector<int> &Trip, const vector<vector<double>> &Ex, double t_trip, double start_time, int batch_size = 10)
+{
+
+    double now = start_time;
+    int size = Trip.size() - 1;
+
+    int num_batch = size / batch_size;
+    int batch_size_last = size % batch_size;
+    vector<int> solut;
+
+    for (int i = 0; i < num_batch; i++)
+    {
+        int start = i * batch_size;
+        int end = start + batch_size - 1;
+        vector<int> mapping(batch_size);
+        vector<vector<double>> map_cost(batch_size, vector<double>(batch_size));
+        vector<double> earliest(batch_size);
+        vector<double> lastest(batch_size);
+        vector<double> service_time(batch_size, 0);
+
+        for (int j = start; j <= end; j++)
+        {
+            mapping[j - start] = Trip[j];
+        }
+
+        for (int j = start; j <= end; j++)
+        {
+            for (int k = start; k <= end; k++)
+            {
+                map_cost[j - start][k - start] = t_trip * Ex[mapping[j]][mapping[k]];
+            }
+        }
+
+        for (int j = start; j <= end; j++)
+        {
+            earliest[j - start] = Cus[mapping[j]].start;
+            lastest[j - start] = Cus[mapping[j]].end;
+        }
+
+        HamiltonPath tsptw(batch_size, map_cost, earliest, lastest, service_time, now);
+        auto solution = tsptw.solve();
+        if (solution.first != -1)
+        {
+            for (int x : solution.second)
+            {
+                solut.push_back(mapping[x]);
+                now += t_trip * Ex[mapping[x]][mapping[x + 1]];
+            }
+        }
+        else
+        {
+            for (int j = start; j <= end; j++)
+            {
+                cout << j << " " << mapping[j - start] << endl;
+            }
+            cout << "time " << now << endl;
+            for (int j = start; j <= end; j++)
+            {
+                cout << earliest[j - start] << " " << lastest[j - start] << endl;
+            }
+
+            for (int j = start; j <= end; j++)
+            {
+                for (int k = start; k <= end; k++)
+                {
+                    cout << map_cost[j - start][k - start] << " ";
+                }
+                cout << endl;
+            }
+            return {-1, {}};
+        }
+    }
+
+    vector<int> mapping(batch_size_last);
+    vector<vector<double>> map_cost(batch_size_last, vector<double>(batch_size_last));
+    vector<double> earliest(batch_size_last);
+    vector<double> lastest(batch_size_last);
+    vector<double> service_time(batch_size_last, 0);
+
+    for (int j = size - batch_size_last + 1; j <= size; j++)
+    {
+        mapping[j - (size - batch_size_last + 1)] = Trip[j];
+    }
+    for (int j = size - batch_size_last + 1; j <= size; j++)
+    {
+        for (int k = size - batch_size_last + 1; k <= size; k++)
+        {
+            map_cost[j - (size - batch_size_last + 1)][k - (size - batch_size_last + 1)] = t_trip * Ex[mapping[j]][mapping[k]];
+        }
+    }
+    for (int j = size - batch_size_last + 1; j <= size; j++)
+    {
+        earliest[j - (size - batch_size_last + 1)] = Cus[mapping[j]].start;
+        lastest[j - (size - batch_size_last + 1)] = Cus[mapping[j]].end;
+    }
+    HamiltonPath tsptw(batch_size_last, map_cost, earliest, lastest, service_time, now);
+    auto solution = tsptw.solve();
+    if (solution.first != -1)
+    {
+        for (int x : solution.second)
+        {
+            solut.push_back(mapping[x]);
+            now += t_trip * Ex[mapping[x]][mapping[x + 1]];
+        }
+    }
+    else
+    {
+        for (int j = size - batch_size_last + 1; j <= size; j++)
+        {
+            cout << j << " " << mapping[j - (size - batch_size_last + 1)] << endl;
+        }
+        cout << "time " << now << endl;
+        for (int j = size - batch_size_last + 1; j <= size; j++)
+        {
+            cout << earliest[j - (size - batch_size_last + 1)] << " " << lastest[j - (size - batch_size_last + 1)] << endl;
+        }
+
+        for (int j = size - batch_size_last + 1; j <= size; j++)
+        {
+            for (int k = size - batch_size_last + 1; k <= size; k++)
+            {
+                cout << map_cost[j - (size - batch_size_last + 1)][k - (size - batch_size_last + 1)] << " ";
+            }
+            cout << endl;
+        }
+        return {-1, {}};
+    }
+    solut.push_back(0);
+    return {0, solut};
 }

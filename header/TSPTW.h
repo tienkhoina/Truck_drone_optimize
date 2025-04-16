@@ -16,16 +16,15 @@ public:
           const std::vector<double> &service_times,
           double start_time = 0.0);
 
-    std::pair<int,std::vector<int>> solve();
+    virtual std::pair<int, std::vector<int>> solve();
 
-
-private:
+protected:
     void validateData();
     void initializeSolver();
     void createVariables();
-    void addConstraints();
+    virtual void addConstraints();
     void setObjective();
-    std::vector<int> extractSolution() const;
+    virtual std::vector<int> extractSolution() const;
     double computeBigM() const;
 
     int n_;

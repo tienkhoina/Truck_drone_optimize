@@ -42,11 +42,24 @@ int main()
         cout << endl;
     }
 
-    Population pop(num_Custom, 50);
-    for(auto m : pop.Mem)
-        m.print();
+    
 
-    pop.Genetic("NSGA_II", 0.4, 30);
+    cout << int(checkValidVector({0, 5,4,13,16,0}, 0, 0)) << endl;
+    cout << int(checkValidVector({0, 4,5, 16, 13, 0}, 0, 0)) << endl;
+
+    auto solut = solverTSPTWmapping({0, 5,4,13,16,0}, Ex, t_Truck, 0);
+
+    for (int x : solut.second)
+    {
+        cout << x << " ";
+    }
+    cout << endl;
+    Population pop(num_Custom, 50);
+
+    // cout << "cá thể 1: " << endl;
+    // pop.Mem[0].print();
+
+    pop.Genetic("NSGA_II", 0.4, 50);
 
     cout << "Ok" << endl;
 

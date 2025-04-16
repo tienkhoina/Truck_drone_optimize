@@ -57,15 +57,6 @@ void TSPTW::initializeSolver()
 
     if (!solver_)
         throw std::runtime_error("Failed to create SCIP solver");
-
-    solver_->set_time_limit(12000); 
-
-    // Tắt đầu ra của SCIP
-    solver_->SetSolverSpecificParametersAsString(
-        "display/verblevel = 0\n" // Tắt hiển thị log
-        "presolving/maxrounds = 10\n"
-        "separating/maxrounds = 20\n"
-        "limits/gap = 0.01\n");
 }
 
 void TSPTW::createVariables()

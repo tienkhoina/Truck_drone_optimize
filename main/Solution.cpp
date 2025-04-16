@@ -4,32 +4,20 @@
 #include "TSPTW.h"
 #include "function.h"
 
-Solution::Solution(vector<vector<int>> route, vector<int> role, vector<int> mark) : Route(route), Role(role),Mark(mark)
+Solution::Solution(vector<vector<int>> route, vector<int> role, vector<int> mark)
+    : Route(route), Role(role), Mark(mark), num_drone(0), num_truck(0), f1(0), f2(0)
 {
-    //cout << "bắt đầu tạo solution" << endl;
-    num_drone = 0;
-    num_truck = 0;
-    f1 = 0;
-    f2 = 0;
+    // Tính số điểm phục vụ (bỏ điểm depot ở đầu và cuối)
+    for (const auto &trip : Route)
+        f1 += trip.size() - 2;
 
-    for (const vector<int> &Trip : Route)
-    {
-        f1 += Trip.size() - 2;
-    }
+    // Sắp xếp Role, Route, Mark theo Role
+    vector<tuple<int, vector<int>, int>> combined;
+    for (size_t i = 0; i < Role.size(); ++i)
+        combined.emplace_back(Role[i], Route[i], Mark[i]);
 
-    vector<tuple<int, vector<int>, int>> combined; // Dùng tuple để chứa cả Role, Route và Mark
-
-    // Gộp dữ liệu vào combined
-    for (size_t i = 0; i < Role.size(); i++)
-    {
-        combined.push_back({Role[i], Route[i], Mark[i]});
-    }
-
-    // Sắp xếp theo Role
     sort(combined.begin(), combined.end());
-
-    // Cập nhật lại Role, Route và Mark theo thứ tự mới
-    for (size_t i = 0; i < combined.size(); i++)
+    for (size_t i = 0; i < combined.size(); ++i)
     {
         Role[i] = get<0>(combined[i]);
         Route[i] = get<1>(combined[i]);
@@ -38,209 +26,141 @@ Solution::Solution(vector<vector<int>> route, vector<int> role, vector<int> mark
 
     int index = 0;
 
-    // 🚛 Xử lý TRUCK (role = 0)
+    // ===== XỬ LÝ TRUCK (role = 0) =====
     while (index < Route.size() && Role[index] == 0)
     {
-        double weight = 0;
-        num_truck++;
-
-        // cout << "\n🚛 Truck " << num_truck << " bắt đầu từ 0\n";
-
-        for (int i = 0; i < Route[index].size() - 1; i++)
+        if (!checkValidVector(Route[index], 0, 0))
         {
-            int from = Route[index][i];
-            int to = Route[index][i + 1];
-
-            weight += Cus[to].weight;
+            invalidate();
+            return;
         }
+
+        double weight = 0;
+        for (int i = 0; i < Route[index].size() - 1; ++i)
+            weight += Cus[Route[index][i + 1]].weight;
 
         if (weight > Max_Weight_Truck)
         {
-            cout << "❌ Lỗi trọng lượng: " << weight << " > " << Max_Weight_Truck << endl;
-            f1 = -1;
-            f2 = INT_MAX;
+            // cout << "❌ Lỗi trọng lượng Truck\n";
+            invalidate();
             return;
         }
 
-        index++;
+        ++num_truck;
+        ++index;
     }
-    int current_role = -1;
+
+    // ===== XỬ LÝ DRONE (role > 0) =====
+    double currentTime = 0;
+    int currentRole = -1;
 
     while (index < Route.size())
     {
         double weight = 0;
-
-        if (current_role == Role[index])
+        if (currentRole != Role[index])
         {
-            // cout << "\n🚀 Drone tiếp tục sử dụng (role = " << Role[index] << ")\n";
-        }
-        else
-        {
-            current_role = Role[index];
-            num_drone++;
-            // cout << "\n🚀 Drone " << num_drone << " bắt đầu từ 0 (role = " << current_role << ")\n";
+            currentRole = Role[index];
+            ++num_drone;
+            currentTime = 0;
         }
 
-        for (int i = 0; i < Route[index].size() - 1; i++)
-        {
-            int from = Route[index][i];
-            int to = Route[index][i + 1];
-
-            weight += Cus[to].weight;
-
-        }
+        for (int i = 0; i < Route[index].size() - 1; ++i)
+            weight += Cus[Route[index][i + 1]].weight;
 
         if (weight > Max_Weight_Drone)
         {
-            // cout << "❌ Lỗi trọng lượng drone: " << weight << " > " << Max_Weight_Drone << endl;
-            f1 = -1;
-            f2 = INT_MAX;
+            // cout << "❌ Lỗi trọng lượng Drone\n";
+            invalidate();
             return;
         }
-        index++;
-    }
-    //cout << "kiểm tra xong weight" << endl;
 
-    index = 0;
-    while (index < Route.size() && Role[index] == 0)
-    {
-        //cout << Mark[index] << endl;
-        if(Mark[index]==1) {
-            index++;
+        // Nếu đã tối ưu trước thì chỉ cập nhật thời gian
+        if (Mark[index] == 1)
+        {
+            currentTime = getTimeDroneTrip(Route[index], currentTime);
+            ++index;
             continue;
         }
-        auto solut = solverTSPTWmapping(Route[index], Ex, t_Truck, 0.0);
-        //cout << "solution " << solut.first << endl;
-        if(solut.first == -1){
-            // cout << " không tìm được tối ưu" << endl;
-            f1 = -1;
-            f2 = INT_MAX;
-            return;
-        }
-        else{
-            Route[index] = solut.second;
-            Mark[index] = 1;
-            index++;
-        }
-    }
 
-    double now = 0;
-    current_role = -1;
-    while (index < Route.size())
-    {
-        if (current_role == Role[index])
-        {
-            // cout << "\n🚀 Drone tiếp tục sử dụng (role = " << Role[index] << ")\n";
-        }
-        else
-        {
-            now = 0;
-            current_role = Role[index];
-        }
+        int batch_size = 10;
+        auto result = (Route.size() <= batch_size)
+                          ? solverTSPTWmapping(Route[index], Ex, t_drone, currentTime)
+                          : solverTSPTWmappingLarge(Route[index], Ex, t_drone, currentTime, batch_size);
 
-        if(Mark[index]==1){
-            now = getTimeDroneTrip(Route[index], now);
-            index++;
-            continue;
-        }
-        else{
-            auto solut = solverTSPTWmapping(Route[index], Ex, t_drone, now);
-            if(solut.first == -1){
-                if(now ==0)
-                    cout << " không tìm được tối ưu" <<" " << int(checkValidVector(Route[index],Role[index],now)) << endl;
-                f1 = -1;
-                f2 = INT_MAX;
+        if (result.first == -1)
+        {
+            if (!checkValidVector(Route[index], Role[index], currentTime))
+            {
+                // cout << "❌ Drone không tìm được tối ưu\n";
+                invalidate();
                 return;
             }
-            else{
-                Route[index] = solut.second;
-                now = getTimeDroneTrip(Route[index], now);
-                Mark[index] = 1;
-                index++;
+            else
+            {
+                currentTime = getTimeDroneTrip(Route[index], currentTime);
+                ++index;
+                continue;
             }
         }
+
+        Route[index] = result.second;
+        Mark[index] = 1;
+        currentTime = getTimeDroneTrip(Route[index], currentTime);
+        ++index;
     }
 
-    //cout << "tối ưu xong trip " << endl;
-
+    // ===== TÍNH CHI PHÍ DI CHUYỂN (TRUCK) =====
     index = 0;
-
-    // 🚛 Xử lý TRUCK (role = 0)
     while (index < Route.size() && Role[index] == 0)
     {
-        double now = 0;
-
-        // cout << "\n🚛 Truck " << num_truck << " bắt đầu từ 0\n";
-
-        for (int i = 0; i < Route[index].size() - 1; i++)
-        {
-            int from = Route[index][i];
-            int to = Route[index][i + 1];
-            f2 += k_Truck * Ex[from][to];
-
-            // //cout << "👉 Từ " << from << " đến " << to << " t_truck: " << t_Truck << " Ex: " << Ex[from][to]
-            //      << " | now = " << now
-            //      << " | trọng lượng = " << weight << endl;
-        }
-        index++;
+        for (int i = 0; i < Route[index].size() - 1; ++i)
+            f2 += k_Truck * Ex[Route[index][i]][Route[index][i + 1]];
+        ++index;
     }
 
-    // 🚀 Xử lý DRONE (role > 0)
-    current_role = -1;
-    double useEnergy = 0;
-
+    // ===== TÍNH CHI PHÍ DI CHUYỂN (DRONE) & ENERGY =====
+    currentRole = -1;
     while (index < Route.size())
     {
-        useEnergy = 0;
+        double energy = 0;
+        if (currentRole != Role[index])
+            currentRole = Role[index];
 
-        if (current_role == Role[index])
-        {
-            // cout << "\n🚀 Drone tiếp tục sử dụng (role = " << Role[index] << ")\n";
-        }
-        else
-        {
-            current_role = Role[index];
-            // cout << "\n🚀 Drone " << num_drone << " bắt đầu từ 0 (role = " << current_role << ")\n";
-        }
-
-        for (int i = 0; i < Route[index].size() - 1; i++)
+        for (int i = 0; i < Route[index].size() - 1; ++i)
         {
             int from = Route[index][i];
             int to = Route[index][i + 1];
-
-            useEnergy += en_drone * Ex[from][to];
-            f2 += k_drone * Ex[from][to];
-
-            // //cout << "👉 Từ " << from << " đến " << to
-            //      << " | now = " << now
-            //      << " | trọng lượng = " << weight
-            //      << " | năng lượng = " << useEnergy << endl;
+            double dist = Ex[from][to];
+            energy += en_drone * dist;
+            f2 += k_drone * dist;
         }
 
-        if (useEnergy > Max_Energy)
+        if (energy > Max_Energy)
         {
-            cout << "❌ Lỗi năng lượng drone: " << useEnergy << " > " << Max_Energy << endl;
-            f1 = -1;
-            f2 = INT_MAX;
+            // cout << "❌ Lỗi năng lượng Drone\n";
+            invalidate();
             return;
         }
 
-        index++;
+        ++index;
     }
 
-    //cout << " kiểm tra xong energy" << endl;
-
+    // ===== KIỂM TRA SỐ LƯỢNG PHƯƠNG TIỆN =====
     if (num_drone > max_drone || num_truck > max_truck)
     {
-        cout << "quá số lượng" << endl;;
-        f1 = -1;
-        f2 = INT_MAX;
+        // cout << "❌ Quá số lượng Drone/Truck\n";
+        invalidate();
         return;
     }
 
     f2 += cost_drone * num_drone + cost_truck * num_truck;
 }
 
+void Solution::invalidate()
+{
+    f1 = -1;
+    f2 = INT_MAX;
+}
 
 // Constructor sao chép
 Solution::Solution(const Solution &other)
@@ -307,3 +227,107 @@ void Solution::print() const
     }
 }
 
+void Solution::Tabu_Optimize(int max_iter, int tabu_tenure)
+{
+    // Khởi tạo danh sách Tabu: lưu trạng thái và tuổi của các thao tác
+    vector<vector<pair<int, int>>> tabu_list(num_Custom + 1, vector<pair<int, int>>(num_Custom + 1, {0, 0}));
+    int iter = 0;
+
+    double best_f2 = f2;
+    Solution best_solution = *this;
+
+    while (iter < max_iter)
+    {
+        vector<Solution> neighbors;
+        vector<pair<int, int>> moves;
+
+        // Sinh hàng xóm bằng cách hoán đổi giữa 2 khách hàng ở 2 route khác nhau
+        for (int i = 0; i < Route.size(); i++)
+        {
+            for (int j = i + 1; j < Route.size(); j++)
+            {
+                for (int p = 1; p < Route[i].size() - 1; p++) // bỏ depot ở đầu và cuối
+                {
+                    for (int q = 1; q < Route[j].size() - 1; q++)
+                    {
+                        int u = Route[i][p];
+                        int v = Route[j][q];
+
+                        if (u == 0 || v == 0)
+                            continue; // không hoán đổi depot
+
+                        auto neighbor_route = Route;
+                        auto neighbor_role = Role;
+                        auto neighbor_mark = Mark;
+
+                        swap(neighbor_route[i][p], neighbor_route[j][q]);
+                        neighbor_mark[i] = 0; // cần tính toán lại
+                        neighbor_mark[j] = 0;
+
+                        Solution neighbor(neighbor_route, neighbor_role, neighbor_mark);
+
+                        if (neighbor.f1 != -1 && neighbor.f2 != INT_MAX)
+                        {
+                            bool is_tabu = tabu_list[u][v].first == 1;
+                            bool aspiration = neighbor.f2 < best_f2;
+
+                            if (!is_tabu || aspiration)
+                            {
+                                neighbors.push_back(neighbor);
+                                moves.push_back({u, v});
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (neighbors.empty())
+            break;
+
+        // Tìm giải pháp hàng xóm tốt nhất
+        int best_idx = 0;
+        for (int i = 1; i < neighbors.size(); ++i)
+        {
+            if (neighbors[i] < neighbors[best_idx])
+                best_idx = i;
+        }
+
+        Solution best_neighbor = neighbors[best_idx];
+        int u = moves[best_idx].first;
+        int v = moves[best_idx].second;
+
+        // Đánh dấu thao tác hoán đổi vào tabu list
+        tabu_list[u][v] = {1, tabu_tenure};
+        tabu_list[v][u] = {1, tabu_tenure}; // đối xứng
+
+        // Cập nhật lời giải hiện tại
+        *this = best_neighbor;
+
+        // Cập nhật lời giải tốt nhất nếu có cải thiện
+        if (f2 < best_f2)
+        {
+            best_f2 = f2;
+            best_solution = *this;
+        }
+
+        // Giảm tuổi các mục trong danh sách tabu
+        for (auto &row : tabu_list)
+        {
+            for (auto &entry : row)
+            {
+                if (entry.second > 0)
+                {
+                    entry.second--;
+                    if (entry.second == 0)
+                        entry.first = 0;
+                }
+            }
+        }
+
+        iter++;
+    }
+
+    // Trả lại lời giải tốt nhất toàn cục tìm được
+    *this = best_solution;
+}

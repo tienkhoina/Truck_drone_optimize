@@ -24,6 +24,8 @@ public:
     Solution &operator=(const Solution &other);
     bool operator<(const Solution &other) const;
     bool operator==(const Solution &other) const;
+    void invalidate();
+    void Tabu_Optimize(int max_iter, int tabu_tenure);
     void print() const;
 };
 namespace std

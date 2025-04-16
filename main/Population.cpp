@@ -33,7 +33,7 @@ Population::Population(int _n, int _size) : n(_n), size(_size)
             if (Cus[j].role == 1)
                 S_role1.insert(j);
         }
-        // cout << "ok1" << endl;
+        cout << "ok1" << endl;
 
         // **2️⃣ Truck phục vụ ngẫu nhiên khách hàng trước**
         while (!S_role1.empty() && num_truck<max_truck ) // Lặp đến khi không còn khách role = 1
@@ -53,9 +53,10 @@ Population::Population(int _n, int _size) : n(_n), size(_size)
                     route.push_back(customer);
                     last = customer;                  
                     toRemove.insert(customer);
-                    if (getRandomDouble(0, 1) < drop_insert_custom)
-                        break;
+                    
                 }
+                if (getRandomDouble(0, 1) < drop_insert_custom)
+                    break;
             }
 
         
@@ -81,7 +82,7 @@ Population::Population(int _n, int _size) : n(_n), size(_size)
 
             if(getRandomDouble(0,1)<drop_insert_trip) break;
         }
-        // cout << "ok2" << endl;
+        cout << "ok2" << endl;
 
         // **3️⃣ Đảm bảo Truck đã phục vụ hết role = 1**
         for(int Cus_role1 : S_role1){
@@ -148,7 +149,7 @@ Population::Population(int _n, int _size) : n(_n), size(_size)
             }
             role++; // Tạo drone mới nếu cần
         }
-        // cout << "ok3" << endl;
+        cout << "ok3" << endl;
 
         // **5️⃣ Lưu nghiệm hợp lệ**
         Solution sol(Route, Role);
@@ -161,9 +162,6 @@ Population::Population(int _n, int _size) : n(_n), size(_size)
     for (auto Sol : inserted)
         Mem.push_back(Sol);
 
-    for (auto x: Mem){
-        x.print();
-    }
 }
 
 void Population::sort_by_domination_crowdingdistance(){
@@ -521,12 +519,30 @@ Solution Population::crossover(Solution parent1, Solution parent2){
         trip.pop_back();
         for(int x : S_all){
             if(checkInsertNext(trip,x,childRole[index_child_trip],now)){
+                
+                
+                // cout << " lỗi: " << int(checkInsertNext(trip,x,childRole[index_child_trip],0)) << endl;
                 trip.push_back(x);
                 todelete.push_back(x);
                 childMark[index_child_trip] = 0;
+                // cout << " trip hiện tại có" << endl;
+                // for (int j : trip)
+                // {
+                //     cout << j << " ";
+                // }
             }
         }
         trip.push_back(0);
+        if(!checkValidVector(trip,0,now)){
+            cout << "thêm lỗi truck" << endl;
+            for(int j : trip){
+                cout << j << " ";
+            }
+            cout << childRole[index_child_trip] << endl;
+
+            cout << "lấy từ cha" << endl;
+            parent1.print();
+        }
         childRoute[index_child_trip] = trip;
         // cout << "thêm ";
         // for (int j : childRoute[index_child_trip])
@@ -957,17 +973,88 @@ Solution Population::SelectByParent1(Solution parent1){
     }
     return Mem[last];
 }
-void Population::Genetic(string Method, double mutation_rate, int stagnation){
-    cout << " Start genetic" << endl;
+void Population::Genetic(string Method, double mutation_rate, int stagnation)
+{
+    cout << "Start genetic" << endl;
+
+    int batch_size = 5;
+    int generation = 0;
+    int index = 0;
+
+    auto is_same_pareto = [](const vector<pair<int, double>> &a, const vector<pair<int, double>> &b)
+    {
+        if (a.size() != b.size())
+            return false;
+        for (const auto &p1 : a)
+        {
+            bool found = false;
+            for (const auto &p2 : b)
+            {
+                if (p1.first == p2.first && fabs(p1.second - p2.second) < 1e-6)
+                {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found)
+                return false;
+        }
+        return true;
+    };
+
     if (Method == "NSGA_II")
     {
         NSGA_II<Population, Solution> nsga_ii(*this);
 
-        nsga_ii.NSGA_II_Genetic(mutation_rate, stagnation);
-    }
-    else if(Method == "MOEA"){
-        MOEA<Population, Solution> moea(*this);
-        moea.MOEA_Genetic(mutation_rate, stagnation);
-    }
+        while (generation < stagnation)
+        {
+            cout << "Batch " << index++ << endl;
+            nsga_ii.NSGA_II_Genetic(mutation_rate, batch_size);
 
+            generation += batch_size;
+
+            // Nếu đủ dữ liệu để so sánh
+            if (pareto_front_in_generation.size() < batch_size+1)
+                continue;
+
+            const auto &last_pareto = pareto_front_in_generation[pareto_front_in_generation.size() - batch_size];
+            const auto &current_pareto = pareto_front_in_generation.back();
+
+            if (is_same_pareto(last_pareto, current_pareto))
+            {
+                cout << "Pareto front không thay đổi - Tối ưu Tabu" << endl;
+                for (int i = 0; i < current_pareto.size(); ++i)
+                {
+                    Mem[i].Tabu_Optimize(10, 5);
+                }
+            }
+        }
+    }
+    else if (Method == "MOEA")
+    {
+        MOEA<Population, Solution> moea(*this);
+
+        while (generation < stagnation)
+        {
+            cout << "Batch " << index++ << endl;
+            moea.MOEA_Genetic(mutation_rate, batch_size);
+
+            generation += batch_size;
+
+            if (pareto_front_in_generation.size() < 2)
+                continue;
+
+            const auto &last_pareto = pareto_front_in_generation[pareto_front_in_generation.size() - batch_size];
+            const auto &current_pareto = pareto_front_in_generation.back();
+
+            if (is_same_pareto(last_pareto, current_pareto))
+            {
+                cout << "Pareto front không thay đổi - Tối ưu Tabu" << endl;
+                for (int i = 0; i < current_pareto.size(); ++i)
+                {
+                    Mem[i].Tabu_Optimize(10, 5);
+                }
+            }
+        }
+    }
 }
