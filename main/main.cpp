@@ -42,29 +42,81 @@ int main()
         cout << endl;
     }
 
-    
 
-    cout << int(checkValidVector({0, 5,4,13,16,0}, 0, 0)) << endl;
-    cout << int(checkValidVector({0, 4,5, 16, 13, 0}, 0, 0)) << endl;
-
-    auto solut = solverTSPTWmapping({0, 5,4,13,16,0}, Ex, t_Truck, 0);
-
-    for (int x : solut.second)
-    {
-        cout << x << " ";
-    }
-    cout << endl;
+    // cout << endl;
     Population pop(num_Custom, 50);
+    
+    // cout << Cus[45].start << " " << Cus[45].end << endl;
+    // cout << 0 << " " << t_Truck * Ex[0][12] <<" "<< t_Truck * Ex[0][42] << " " << t_Truck * Ex[0][45] << endl;
+    // cout << t_Truck * Ex[12][0] << " "<< 0 << " " << t_Truck * Ex[12][42] << " " << t_Truck * Ex[12][45] << endl;
+    // cout << t_Truck * Ex[42][0] << " " << t_Truck * Ex[42][12] << " " << 0 << " " << t_Truck * Ex[42][45] << endl;
+    // cout << t_Truck * Ex[45][0] << " " << t_Truck * Ex[45][12] << " " << t_Truck * Ex[45][42] << " " << 0 << endl;
+    // // // cout << "cá thể 1: " << endl;
+    // // pop.Mem[0].print();
+    // cout << int(checkValidVector({0 ,26 ,22 ,1 ,49 ,34 ,37 ,12 ,31 ,32 ,40, 0}, 0, 0));
+    // cout << int(checkValidVector({0 ,49 ,12 ,1 ,22 ,32, 31 ,26 ,37 ,34 ,40 ,0}, 0, 0));
 
-    // cout << "cá thể 1: " << endl;
-    // pop.Mem[0].print();
-
+    // auto solut = solverTSPTWmappingLarge({0, 17, 15, 2, 36, 5, 25, 6, 45, 24, 34, 1, 11, 31, 13, 40, 8, 0}, Ex, t_Truck, 0, 10).second;
+    // cout << "TSPTW: " << endl;
+    // for (int i = 0; i < solut.size(); i++){
+    //     cout << solut[i] << " ";
+    // }
+    // cout << int(checkValidVector(solut, 0, 0)) << endl;
     pop.Genetic("NSGA_II", 0.4, 50);
+    // vector<vector<int>> Route_father = {
+    //     {0, 2, 1, 11, 6, 5, 13, 40, 3, 8, 31, 0},
+    //     {0, 35, 38, 23, 0},
+    //     {0, 30, 0},
+    //     {0, 28, 39, 0},
+    //     {0, 37, 0}};
 
-    cout << "Ok" << endl;
+    // vector<int> Role_father = {
+    //     0, // Truck
+    //     1, // Drone 1
+    //     1, // Drone 1
+    //     2, // Drone 2
+    //     2  // Drone 2
+    // };
 
-    for (int i = 0; i < 10;i++)
-        pop.Mem[i].print();
+    // Solution father(Route_father, Role_father);
+    // cout << "Cha: " << endl;
+    // father.print();
+    // vector<vector<int>> Route_mother = {
+    //     {0, 9, 0},
+    //     {0, 40, 0},
+    //     {0, 28, 37, 0},
+    //     {0, 30, 0},
+    //     {0, 39, 0},
+    //     {0, 35, 38, 23, 0},
+    //     {0, 4, 0}};
+
+    // vector<int> Role_mother = {
+    //     0, // Truck
+    //     1, // Drone 1
+    //     2, // Drone 2
+    //     2, // Drone 2
+    //     2, // Drone 2
+    //     3, // Drone 3
+    //     3  // Drone 3
+    // };
+
+    // Solution mother(Route_mother, Role_mother);
+    // cout << "Mẹ: " << endl;
+    // mother.print();
+
+    // auto child = pop.crossover(father, mother);
+    // cout << "Con: " << endl;
+    // child.print();
+    // cout << "Ok" << endl;
+    // auto child = pop.crossover(pop.Mem[0], pop.Mem[10]);
+    // cout << "Cha: " << endl;
+    // pop.Mem[0].print();
+    // cout << "Mẹ: " << endl;
+    // pop.Mem[10].print();
+    // cout << "Con: " << endl;
+    // child.print();
+    // for (int i = 0; i < 10;i++)
+    //     pop.Mem[i].print();
 
     printParetoFront(pareto_front_in_generation, "D:\\Project GA new\\data\\Pareto1.txt");
     return 0;

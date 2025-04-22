@@ -22,6 +22,7 @@ public:
     Solution(vector<vector<int>> route, vector<int> role, vector<int> mark);
     Solution(const Solution& other);
     Solution &operator=(const Solution &other);
+    void optimize_trip();
     bool operator<(const Solution &other) const;
     bool operator==(const Solution &other) const;
     void invalidate();

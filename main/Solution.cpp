@@ -3,20 +3,29 @@
 #include <algorithm>
 #include "TSPTW.h"
 #include "function.h"
+#include <algorithm> // nhớ include nếu chưa có
 
 Solution::Solution(vector<vector<int>> route, vector<int> role, vector<int> mark)
     : Route(route), Role(role), Mark(mark), num_drone(0), num_truck(0), f1(0), f2(0)
 {
+    
     // Tính số điểm phục vụ (bỏ điểm depot ở đầu và cuối)
     for (const auto &trip : Route)
         f1 += trip.size() - 2;
 
     // Sắp xếp Role, Route, Mark theo Role
+
     vector<tuple<int, vector<int>, int>> combined;
     for (size_t i = 0; i < Role.size(); ++i)
         combined.emplace_back(Role[i], Route[i], Mark[i]);
 
-    sort(combined.begin(), combined.end());
+    // Dùng stable_sort để giữ thứ tự ban đầu khi Role giống nhau
+    stable_sort(combined.begin(), combined.end(),
+                [](const tuple<int, vector<int>, int> &a, const tuple<int, vector<int>, int> &b)
+                {
+                    return get<0>(a) < get<0>(b);
+                });
+
     for (size_t i = 0; i < combined.size(); ++i)
     {
         Role[i] = get<0>(combined[i]);
@@ -31,9 +40,11 @@ Solution::Solution(vector<vector<int>> route, vector<int> role, vector<int> mark
     {
         if (!checkValidVector(Route[index], 0, 0))
         {
+            cout << "❌ Lỗi Truck không tìm được tối ưu\n";
             invalidate();
             return;
         }
+
 
         double weight = 0;
         for (int i = 0; i < Route[index].size() - 1; ++i)
@@ -41,7 +52,7 @@ Solution::Solution(vector<vector<int>> route, vector<int> role, vector<int> mark
 
         if (weight > Max_Weight_Truck)
         {
-            // cout << "❌ Lỗi trọng lượng Truck\n";
+            cout << "❌ Lỗi trọng lượng Truck\n";
             invalidate();
             return;
         }
@@ -49,6 +60,7 @@ Solution::Solution(vector<vector<int>> route, vector<int> role, vector<int> mark
         ++num_truck;
         ++index;
     }
+  
 
     // ===== XỬ LÝ DRONE (role > 0) =====
     double currentTime = 0;
@@ -56,58 +68,37 @@ Solution::Solution(vector<vector<int>> route, vector<int> role, vector<int> mark
 
     while (index < Route.size())
     {
+        
         double weight = 0;
         if (currentRole != Role[index])
         {
             currentRole = Role[index];
             ++num_drone;
             currentTime = 0;
+        
+        }
+
+        if (!checkValidVector(Route[index], currentRole, currentTime))
+        {
+            // cout << "❌ Lỗi Drone không tìm được tối ưu\n";
+            invalidate();
+            return;
         }
 
         for (int i = 0; i < Route[index].size() - 1; ++i)
             weight += Cus[Route[index][i + 1]].weight;
 
+            
         if (weight > Max_Weight_Drone)
         {
-            // cout << "❌ Lỗi trọng lượng Drone\n";
+            cout << "❌ Lỗi trọng lượng Drone\n";
             invalidate();
             return;
         }
-
-        // Nếu đã tối ưu trước thì chỉ cập nhật thời gian
-        if (Mark[index] == 1)
-        {
-            currentTime = getTimeDroneTrip(Route[index], currentTime);
-            ++index;
-            continue;
-        }
-
-        int batch_size = 10;
-        auto result = (Route.size() <= batch_size)
-                          ? solverTSPTWmapping(Route[index], Ex, t_drone, currentTime)
-                          : solverTSPTWmappingLarge(Route[index], Ex, t_drone, currentTime, batch_size);
-
-        if (result.first == -1)
-        {
-            if (!checkValidVector(Route[index], Role[index], currentTime))
-            {
-                // cout << "❌ Drone không tìm được tối ưu\n";
-                invalidate();
-                return;
-            }
-            else
-            {
-                currentTime = getTimeDroneTrip(Route[index], currentTime);
-                ++index;
-                continue;
-            }
-        }
-
-        Route[index] = result.second;
-        Mark[index] = 1;
         currentTime = getTimeDroneTrip(Route[index], currentTime);
         ++index;
     }
+    
 
     // ===== TÍNH CHI PHÍ DI CHUYỂN (TRUCK) =====
     index = 0;
@@ -137,7 +128,8 @@ Solution::Solution(vector<vector<int>> route, vector<int> role, vector<int> mark
 
         if (energy > Max_Energy)
         {
-            // cout << "❌ Lỗi năng lượng Drone\n";
+            cout << "❌ Lỗi năng lượng Drone" << energy << endl;
+            cout << checkValidVector(Route[index], Role[index], 0) << endl;
             invalidate();
             return;
         }
@@ -148,7 +140,197 @@ Solution::Solution(vector<vector<int>> route, vector<int> role, vector<int> mark
     // ===== KIỂM TRA SỐ LƯỢNG PHƯƠNG TIỆN =====
     if (num_drone > max_drone || num_truck > max_truck)
     {
-        // cout << "❌ Quá số lượng Drone/Truck\n";
+        cout << "❌ Quá số lượng Drone/Truck\n";
+        invalidate();
+        return;
+    }
+
+    f2 += cost_drone * num_drone + cost_truck * num_truck;
+}
+void Solution::optimize_trip(){
+    //lưu giá trị cũ nếu không tối ưu được
+    vector<vector<int>> oldRoute = Route;
+    vector<int> oldRole = Role;
+    vector<int> oldMark = Mark;
+    double oldf1 = f1;
+    double oldf2 = f2;
+    int old_num_drone = num_drone;
+    int old_num_truck = num_truck;
+
+    num_drone = 0;
+    num_truck = 0;
+    f2 = 0;
+
+    int index = 0;
+
+    // ===== TRUCK =====
+    while (index < Route.size() && Role[index] == 0)
+    {
+        if (!checkValidVector(Route[index], 0, 0))
+        {
+            cout << "❌ Lỗi Truck không hợp lệ\n";
+            invalidate();
+            return;
+        }
+
+        if (Mark[index] == 1)
+        {
+            ++index;
+            continue;
+        }
+
+        int batch_size = 10;
+        auto result = (Route[index].size() - 1 <= batch_size)
+                          ? solverTSPTWmapping(Route[index], Ex, t_Truck, 0)
+                          : solverTSPTWmappingLarge(Route[index], Ex, t_Truck, 0, batch_size);
+
+        if (result.first == -1)
+        {
+            if (!checkValidVector(Route[index], 0, 0))
+            {
+                cout << "❌ Truck không tìm được tối ưu\n";
+                Route = oldRoute;
+                Role = oldRole;
+                Mark= oldMark;
+                f1 = oldf1;
+                f2 = oldf2;
+                return;
+            }
+            ++index;
+            continue;
+        }
+
+        Route[index] = result.second;
+        if(!checkValidVector(Route[index], 0, 0)){
+            Route = oldRoute;
+            Role = oldRole;
+            Mark= oldMark;
+            f1 = oldf1;
+            f2 = oldf2;
+            return;
+        }
+        Mark[index] = 1;
+
+        double weight = 0;
+        for (int i = 0; i < Route[index].size() - 1; ++i)
+            weight += Cus[Route[index][i + 1]].weight;
+
+        if (weight > Max_Weight_Truck)
+        {
+            cout << "❌ Trọng lượng Truck vượt quá giới hạn\n";
+            invalidate();
+            return;
+        }
+
+        ++num_truck;
+        ++index;
+    }
+
+    // ===== DRONE =====
+    double currentTime = 0;
+    int currentRole = -1;
+
+    while (index < Route.size())
+    {
+        double weight = 0;
+        if (currentRole != Role[index])
+        {
+            currentRole = Role[index];
+            ++num_drone;
+            currentTime = 0;
+        }
+
+        for (int i = 0; i < Route[index].size() - 1; ++i)
+            weight += Cus[Route[index][i + 1]].weight;
+
+        if (weight > Max_Weight_Drone)
+        {
+            cout << "❌ Trọng lượng Drone vượt quá giới hạn\n";
+            invalidate();
+            return;
+        }
+
+        if (Mark[index] == 1)
+        {
+            currentTime = getTimeDroneTrip(Route[index], currentTime);
+            ++index;
+            continue;
+        }
+
+        int batch_size = 10;
+        auto result = (Route[index].size() - 1 <= batch_size)
+                          ? solverTSPTWmapping(Route[index], Ex, t_drone, currentTime)
+                          : solverTSPTWmappingLarge(Route[index], Ex, t_drone, currentTime, batch_size);
+
+        if (result.first == -1)
+        {
+            if (!checkValidVector(Route[index], Role[index], currentTime))
+            {
+                Route = oldRoute;
+                Role = oldRole;
+                Mark = oldMark;
+                f1 = oldf1;
+                f2 = oldf2;
+                return;
+            }
+            currentTime = getTimeDroneTrip(Route[index], currentTime);
+            ++index;
+            continue;
+        }
+
+        Route[index] = result.second;
+        if(!checkValidVector(Route[index], Role[index], currentTime)){
+            Route = oldRoute;
+            Role = oldRole;
+            Mark= oldMark;
+            f1 = oldf1;
+            f2 = oldf2;
+            return;
+        }
+        Mark[index] = 1;
+        currentTime = getTimeDroneTrip(Route[index], currentTime);
+        ++index;
+    }
+
+    // ===== TÍNH CHI PHÍ =====
+    f2 = 0;
+    index = 0;
+    while (index < Route.size() && Role[index] == 0)
+    {
+        for (int i = 0; i < Route[index].size() - 1; ++i)
+            f2 += k_Truck * Ex[Route[index][i]][Route[index][i + 1]];
+        ++index;
+    }
+
+    currentRole = -1;
+    while (index < Route.size())
+    {
+        double energy = 0;
+        if (currentRole != Role[index])
+            currentRole = Role[index];
+
+        for (int i = 0; i < Route[index].size() - 1; ++i)
+        {
+            int from = Route[index][i];
+            int to = Route[index][i + 1];
+            double dist = Ex[from][to];
+            energy += en_drone * dist;
+            f2 += k_drone * dist;
+        }
+
+        if (energy > Max_Energy)
+        {
+            cout << "❌ Drone vượt quá giới hạn năng lượng\n";
+            invalidate();
+            return;
+        }
+
+        ++index;
+    }
+
+    if (num_drone > max_drone || num_truck > max_truck)
+    {
+        cout << "❌ Vượt quá số lượng Drone/Truck\n";
         invalidate();
         return;
     }
@@ -209,6 +391,16 @@ void Solution::print() const
     if (f1 == -1 || f2 == INT_MAX)
     {
         cout << "Not feasible";
+        int index = 0;
+        for (vector<int> Trip : Route)
+        {
+            for (int x : Trip)
+            {
+                cout << x << " ";
+            }
+            cout << "Role: " << Role[index++] << endl;
+        }
+        cout << endl;
     }
     else
     {
@@ -265,7 +457,8 @@ void Solution::Tabu_Optimize(int max_iter, int tabu_tenure)
                         neighbor_mark[j] = 0;
 
                         Solution neighbor(neighbor_route, neighbor_role, neighbor_mark);
-
+                        neighbor.optimize_trip(); // Tối ưu hóa lời giải hàng xóm
+                        // Kiểm tra tính hợp lệ của lời giải hàng xóm
                         if (neighbor.f1 != -1 && neighbor.f2 != INT_MAX)
                         {
                             bool is_tabu = tabu_list[u][v].first == 1;

@@ -44,10 +44,7 @@ void TSPTW::validateData()
 
 double TSPTW::computeBigM() const
 {
-    double max_time = 0;
-    for (double t : latest_)
-        max_time = std::max(max_time, t);
-    return max_time * 2;
+    return 1e4;
 }
 
 void TSPTW::initializeSolver()
@@ -57,6 +54,7 @@ void TSPTW::initializeSolver()
 
     if (!solver_)
         throw std::runtime_error("Failed to create SCIP solver");
+   
 }
 
 void TSPTW::createVariables()
@@ -84,6 +82,7 @@ void TSPTW::createVariables()
 
 void TSPTW::addConstraints()
 {
+    
     // Flow constraints
     for (int i = 1; i <= n_; ++i)
     {

@@ -10,7 +10,7 @@
 
 Population::Population(int _n, int _size) : n(_n), size(_size)
 {
-    set<Solution> inserted;
+    unordered_set<Solution> inserted;
     int n_random_shuffle = size;
     cout << "Tạo cá thể bởi RD: " << n_random_shuffle << endl;
     // cout << "n_random_shuffle = " << n_random_shuffle << endl;
@@ -18,7 +18,7 @@ Population::Population(int _n, int _size) : n(_n), size(_size)
 
     while (inserted.size() < n_random_shuffle)
     {
-        // cout << "chạy while" << endl;
+        cout << "inserted.size() = " << inserted.size() << endl;
         int num_truck = 0;
         int num_drone = 0;
         vector<vector<int>> Route;  // Danh sách các trip
@@ -103,6 +103,7 @@ Population::Population(int _n, int _size) : n(_n), size(_size)
             {
                 vector<int> route = {0};                                  // Bắt đầu từ kho
                 double now = (lastDroneRole == role) ? lastDroneTime : 0; // Giữ nguyên now nếu cùng Drone, ngược lại reset về 0
+                lastDroneRole = role; // Cập nhật role của Drone
                 int last = 0;
                 unordered_set<int> toRemove;
 
@@ -111,8 +112,10 @@ Population::Population(int _n, int _size) : n(_n), size(_size)
 
                 for (int customer : candidates)
                 {
-                    if (checkInsertNext(route, customer, 0, now))
-                    {
+                    if (checkInsertNext(route, customer, role, now))
+                     {   
+                        //cout << " now = " << now << " ";
+                    //     cout << int(checkInsertNext(route, customer, role, now)) << endl;
                         route.push_back(customer);
                         last = customer;
                         toRemove.insert(customer);
@@ -131,10 +134,26 @@ Population::Population(int _n, int _size) : n(_n), size(_size)
                 if (route.size() > 1) // Chỉ lưu nếu có khách
                 {
                     route.push_back(0); // Quay về kho
+                   
+                    // cout << " thêm route " << endl;
+                    // for (int x : route)
+                    //     cout << x << " ";
+                    // cout << endl;
+                    // cout << "lastDroneTime = " << lastDroneTime << endl;
+                    if(route.size()<=11){
+                        route = solverTSPTWmapping(route, Ex, t_drone,now).second;
+                    }
+                    else{
+                        auto lastroute = route;
+                        route = solverTSPTWmappingLarge(route, Ex, t_drone, now,10).second;
+                        if(!checkValidVector(route, role, now)){
+                            route = lastroute;
+                        }
+                    }
                     Route.push_back(route);
                     Role.push_back(role);
                     lastDroneTime = getTimeDroneTrip(route,now); // Cập nhật thời gian bắt đầu của trip cuối cùng của Drone
-                    // cout <<"last time" << lastDroneTime;
+                    
                     lastDroneRole = role; // Ghi nhớ role của trip vừa thực hiện
                     if(getRandomDouble(0,1)<drop_insert_trip){
                         can_continue = false; // Không thể xếp thêm khách, tạo drone mới
@@ -160,8 +179,27 @@ Population::Population(int _n, int _size) : n(_n), size(_size)
     // cout << endl << inserted.size();
 
     for (auto Sol : inserted)
-        Mem.push_back(Sol);
-
+        {
+            Sol.optimize_trip();
+            Mem.push_back(Sol);
+        }
+    // for (auto Sol : inserted)
+    // {
+       
+    //     cout << "trước khi tối ưu hóa" << endl;
+    //     Sol.print();
+    //     cout << "sau khi tối ưu hóa" << endl;
+    //     Sol.optimize_trip();
+    //     Solution test(Sol.Route, Sol.Role);
+    //     Sol.print();
+    //     test.print();
+    //     if (test.f1 != Sol.f1 || test.f2 != Sol.f2)
+    //     {
+    //         cout << "Lỗi nghiệm khởi tạo" << endl;
+    //         cout << "f1 = " << test.f1 << " f2 = " << test.f2 << endl;
+    //         cout << "f1 = " << Sol.f1 << " f2 = " << Sol.f2 << endl;
+    //     }
+    // }
 }
 
 void Population::sort_by_domination_crowdingdistance(){
@@ -297,7 +335,7 @@ Solution Population::TNselection(int k){
 
 Solution Population::crossover(Solution parent1, Solution parent2){
 
-    // //cout << " Bắt đầu lai" << endl;
+    // cout << " Bắt đầu lai" << endl;
     // cout << "cha: " << endl;
     // parent1.print();
     // cout << "mẹ: " << endl;
@@ -403,39 +441,55 @@ Solution Population::crossover(Solution parent1, Solution parent2){
     }
     // cout << "Thêm truck từ cha xong" <<endl;
     lastRole = 1;
-    
-        if (Set_Trip_Role_parent1.size() > 1)
-        {
-            int h = getRandomNumber(1, Set_Trip_Role_parent1.size() - 1);
-            unordered_set<int> ch;
-            while (ch.size() < h)
-            {
-                int id = getRandomNumber(1, Set_Trip_Role_parent1.size() - 1);
-                if (ch.find(id) == ch.end())
-                {
-                    ch.insert(id);
-                    for (int r : Set_Trip_Role_parent1[id])
-                    {
-                        childRoute.push_back(parent1.Route[r]);
-                        childRole.push_back(lastRole);
+    if (Set_Trip_Role_parent1.size() > 1)
+    {
+        int h = getRandomNumber(1, Set_Trip_Role_parent1.size() - 1);
 
-                        for (int R : parent1.Route[r])
-                        {
-                            S_all.erase(R);
-                        }
-                        // cout << "thêm ";
-                        // for (int j : childRoute.back())
-                        // {
-                        //     cout << j << " ";
-                        // }
-                        // cout << childRole.back() << endl;
-                    }
-                    lastRole++;
-                    num_drone++;
-                }
-            }
+        unordered_set<int> selected_roles;
+        while (selected_roles.size() < h)
+        {
+            int id = getRandomNumber(1, Set_Trip_Role_parent1.size() - 1);
+            selected_roles.insert(id);
         }
+
+        for (int choose_role : selected_roles)
+        {
+            for (int ide = 0; ide < parent1.Route.size(); ide++)
+            {
+                if (parent1.Role[ide] == choose_role)
+                {
+                    childRoute.push_back(parent1.Route[ide]);
+                    for (int v : parent1.Route[ide])
+                    {
+                        S_all.erase(v);
+                        S_role1.erase(v);
+                    }
+                    childRole.push_back(lastRole);
+                    // cout << "thêm ";
+                    // for (int j : childRoute.back())
+                    // {
+                    //     cout << j << " ";
+                    // // }
+                    // cout << "thêm route" << endl;
+                    // for (int j : childRoute.back())
+                    // {
+                    //     cout << j << " ";
+                    // }
+                    // cout << childRole.back() << endl;
+                }
+                
+                
+            }
+            
+            
+            lastRole++;
+            num_drone++;
+        }
+    }
+    //  cout << "thêm drone từ cha xong" << endl;
+    // Solution(childRoute, childRole).print();
     // cout << "thêm drone từ cha xong" << endl;
+    // Solution(childRoute, childRole).print();
     for(int id: Route_truck_parent2){
         if(num_truck>=max_truck)
             break;
@@ -485,27 +539,61 @@ Solution Population::crossover(Solution parent1, Solution parent2){
             }
         }
         if (flag){
-            for (int r : Set_Trip_Role_parent2[index_set])
-            {
-                childRoute.push_back(parent2.Route[r]);
-                for (int cus : parent2.Route[r])
+            for (int ide = 0; ide < parent2.Route.size(); ide++){
+                if (parent2.Role[ide] == index_set)
                 {
-                    S_all.erase(cus);
+                    childRoute.push_back(parent2.Route[ide]);
+                    for (int v : parent2.Route[ide])
+                    {
+                        S_all.erase(v);
+                        S_role1.erase(v);
+                    }
+                    childRole.push_back(lastRole);
                 }
-                childRole.push_back(lastRole);
-                num_drone++;
             }
-            // cout << "thêm ";
-            // for (int j : childRoute.back())
-            // {
-            //     cout << j << " ";
-            // }
-            // cout << childRole.back() << endl;
-            lastRole++;
+                // cout << "thêm ";
+                // for (int j : childRoute.back())
+                // {
+                //     cout << j << " ";
+                // }
+                // cout << childRole.back() << endl;
+                num_drone++;
+                lastRole++;
         }
     }
     }
     // cout << "thêm drone từ mẹ xong" << endl;
+    // Solution(childRoute, childRole).print();
+
+    //sắp xếp lại childRoute và childRole theo thứ tự tăng dần của role
+
+
+    vector<pair<int,vector<int>>> childRouteRole;
+    for (int i = 0; i < childRoute.size(); i++)
+    {
+        childRouteRole.push_back({childRole[i], childRoute[i]});
+    }
+
+    // Dùng stable_sort để giữ nguyên thứ tự của các phần tử cùng role
+    stable_sort(childRouteRole.begin(), childRouteRole.end(),
+                [](const pair<int, vector<int>> &a, const pair<int, vector<int>> &b)
+                {
+                    return a.first < b.first;
+                });
+
+    // Tách lại ra
+    for (int i = 0; i < childRouteRole.size(); i++)
+    {
+        childRoute[i] = childRouteRole[i].second;
+        childRole[i] = childRouteRole[i].first;
+    }
+
+    
+
+    // cout << "sắp xếp lại childRoute và childRole xong" << endl;
+    // cout << "childRoute: " << endl;
+    
+
 
     vector<int> childMark(childRoute.size(),1);
     int index_child_trip = 0;
@@ -533,16 +621,6 @@ Solution Population::crossover(Solution parent1, Solution parent2){
             }
         }
         trip.push_back(0);
-        if(!checkValidVector(trip,0,now)){
-            cout << "thêm lỗi truck" << endl;
-            for(int j : trip){
-                cout << j << " ";
-            }
-            cout << childRole[index_child_trip] << endl;
-
-            cout << "lấy từ cha" << endl;
-            parent1.print();
-        }
         childRoute[index_child_trip] = trip;
         // cout << "thêm ";
         // for (int j : childRoute[index_child_trip])
@@ -555,18 +633,21 @@ Solution Population::crossover(Solution parent1, Solution parent2){
             S_role1.erase(y);
         }
     }
+    // cout << "chèn xong truck " << endl;
+    
     // cout << "chèn xong truck con " << endl;
+    // Solution(childRoute, childRole).print();
     lastRole = 0;
-    int now = 0;
+    double now = 0;
     
     for (; index_child_trip < childRoute.size(); index_child_trip++)
     {
-        //cout << index_child_trip <<" "<< childRoute.size() << endl;
+        // cout << index_child_trip <<" "<< childRoute.size() << endl;
         if(childRole[index_child_trip]!=lastRole){
             lastRole = childRole[index_child_trip];
             now = 0;
         }
-        //cout << " bây giờ " << now << endl;
+        // cout << " bây giờ " << now << endl;
         vector<int> trip = childRoute[index_child_trip];
         vector<int> todelete;
         trip.pop_back();
@@ -574,12 +655,39 @@ Solution Population::crossover(Solution parent1, Solution parent2){
         {
             if (checkInsertNext(trip, x, childRole[index_child_trip], now))
             {
+                // cout << "đang test" << endl;
+                bool flag = true;
+                double now_virtual = now;
+                auto temp = trip;
+                temp.push_back(x);
+                temp.push_back(0);
+                // cout << "temp hợp lệ: " << int(checkValidVector(temp, childRole[index_child_trip], now_virtual)) << endl;
+                now_virtual = getTimeDroneTrip(temp, now_virtual);
+
+                
+                for(int ide = index_child_trip+1; ide < childRoute.size(); ide++){
+                    if(childRole[ide] == childRole[index_child_trip]){
+                        if(!checkValidVector(childRoute[ide], childRole[ide], now_virtual)){
+                            flag = false;
+                            break;
+                        }
+                        now_virtual = getTimeDroneTrip(childRoute[ide], now_virtual);
+                    }
+                    else{
+                        break;
+                    }
+                }
+                // cout << "flag = " << flag << endl;
+                if(!flag){
+                    continue;
+                }
                 trip.push_back(x);
                 todelete.push_back(x);
                 childMark[index_child_trip] = 0;
             }
         }
         trip.push_back(0);
+        // cout << "trip hợp lệ :" << int(checkValidVector(trip, childRole[index_child_trip], now)) << endl;
         childRoute[index_child_trip] = trip;
         // cout << "thêm ";
         // for (int j : childRoute[index_child_trip])
@@ -594,8 +702,10 @@ Solution Population::crossover(Solution parent1, Solution parent2){
             S_role1.erase(y);
         }
     }
-    // cout << "chèn xong drone con" << endl;
 
+
+    // cout << "chèn xong drone con" << endl;
+    // Solution(childRoute, childRole).print();
     now = 0;
     lastRole++;
     //cout << num_Custom - S_all.size() << min_custom_serve << endl;
@@ -625,6 +735,7 @@ Solution Population::crossover(Solution parent1, Solution parent2){
                 S_all.erase(v);
                 S_role1.erase(v);
             }
+            childMark.push_back(0);
         }
         else{
 
@@ -680,11 +791,48 @@ Solution Population::crossover(Solution parent1, Solution parent2){
                 now = 0;                
             }
         }
+        childMark.push_back(1);
         }
-        childMark.push_back(0);
+        
+    }
+    // cout << "lai ghép xong" << endl;
+   
+    childRouteRole.clear();
+    for (int i = 0; i < childRoute.size(); i++)
+    {
+        childRouteRole.push_back({childRole[i], childRoute[i]});
     }
 
-    return Solution(childRoute, childRole,childMark);
+    // Dùng stable_sort để giữ nguyên thứ tự của các phần tử cùng role
+    stable_sort(childRouteRole.begin(), childRouteRole.end(),
+                [](const pair<int, vector<int>> &a, const pair<int, vector<int>> &b)
+                {
+                    return a.first < b.first;
+                });
+
+    // Tách lại ra
+    for (int i = 0; i < childRouteRole.size(); i++)
+    {
+        childRoute[i] = childRouteRole[i].second;
+        childRole[i] = childRouteRole[i].first;
+    }
+    // cout << "childRoute: " << endl;
+    // for (int i = 0; i < childRoute.size(); i++)
+    // {
+    //     cout << "role: " << childRole[i] << " ";
+    //     for (int j : childRoute[i])
+    //     {
+    //         cout << j << " ";
+    //     }
+    //     cout << endl;
+    // }
+    Solution child(childRoute, childRole, childMark);
+    // cout << "truớc khi tối ưu hóa" << endl;
+    // child.print();
+    child.optimize_trip();
+    // cout << "sau khi tối ưu hóa" << endl;
+    // Solution(child.Route, child.Role).print();
+    return child;
 }
 
 Solution Population::mutate(Solution parents, double mutation_rate){
@@ -711,6 +859,7 @@ Solution Population::mutate(Solution parents, double mutation_rate){
     childMark[id] = 0;
     Solution child(childRoute, childRole, childMark);
     // child.print();
+    child.optimize_trip();
     return child;
 
     // int index = 0;
