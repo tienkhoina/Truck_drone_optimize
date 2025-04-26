@@ -201,6 +201,77 @@ Population::Population(int _n, int _size) : n(_n), size(_size)
     //     }
     // }
 }
+void Population::basic_sort()
+{
+    vector<vector<int>> F(1); // Các tầng Pareto front
+    vector<int> n(Mem.size(), 0);
+    vector<vector<int>> S(Mem.size());
+
+    // Xác định tập Pareto front
+    for (int i = 0; i < Mem.size(); i++)
+    {
+        for (int j = 0; j < Mem.size(); j++)
+        {
+            if (Mem[i] < Mem[j])
+            {
+                S[i].push_back(j);
+            }
+            else if (Mem[j] < Mem[i])
+            {
+                n[i]++;
+            }
+        }
+        if (n[i] == 0)
+        {
+            F[0].push_back(i);
+        }
+    }
+
+    // Lưu lại Pareto front đầu tiên
+    vector<pair<int, double>> P;
+    for (int i : F[0])
+    {
+        P.push_back({Mem[i].f1, Mem[i].f2});
+    }
+    pareto_front_in_generation.push_back(P);
+
+    // Xây dựng tiếp các front sau
+    int i = 0;
+    while (i < F.size() && !F[i].empty())
+    {
+        vector<int> H;
+        for (int x : F[i])
+        {
+            for (int y : S[x])
+            {
+                n[y]--;
+                if (n[y] == 0)
+                {
+                    H.push_back(y);
+                }
+            }
+        }
+        if (!H.empty())
+            F.push_back(H);
+        i++;
+    }
+    if (F.back().empty())
+        F.pop_back();
+
+    // Gán rank cho từng Solution
+    unordered_map<Solution, int> rank;
+    for (int i = 0; i < F.size(); i++)
+    {
+        for (int x : F[i])
+        {
+            rank[Mem[x]] = i;
+        }
+    }
+
+    // Chỉ sắp xếp Mem theo rank
+    sort(Mem.begin(), Mem.end(), [&](const Solution &a, const Solution &b)
+         { return rank[a] < rank[b]; });
+}
 
 void Population::sort_by_domination_crowdingdistance(){
     vector<vector<int>> F(1);
@@ -320,6 +391,8 @@ void Population::sort_by_domination_crowdingdistance(){
     // for (auto u : Mem)
     //     u.print();
 }
+
+
 
 Solution Population::TNselection(int k){
     vector<Solution> selected;
@@ -1122,7 +1195,7 @@ Solution Population::SelectByParent1(Solution parent1){
     }
     return Mem[last];
 }
-void Population::Genetic(string Method, double mutation_rate, int stagnation)
+void Population::Genetic(string Method, double mutation_rate, int stagnation, bool Selectparent2)
 {
     cout << "Start genetic" << endl;
 
@@ -1158,7 +1231,7 @@ void Population::Genetic(string Method, double mutation_rate, int stagnation)
         while (generation < stagnation)
         {
             cout << "Batch " << index++ << endl;
-            nsga_ii.NSGA_II_Genetic(mutation_rate, batch_size);
+            nsga_ii.NSGA_II_Genetic(mutation_rate, batch_size,Selectparent2);
 
             generation += batch_size;
 
@@ -1174,7 +1247,7 @@ void Population::Genetic(string Method, double mutation_rate, int stagnation)
                 cout << "Pareto front không thay đổi - Tối ưu Tabu" << endl;
                 for (int i = 0; i < current_pareto.size(); ++i)
                 {
-                    Mem[i].Tabu_Optimize(10, 5);
+                    Mem[i].Tabu_Optimize(5, 3);
                 }
             }
         }
@@ -1186,7 +1259,7 @@ void Population::Genetic(string Method, double mutation_rate, int stagnation)
         while (generation < stagnation)
         {
             cout << "Batch " << index++ << endl;
-            moea.MOEA_Genetic(mutation_rate, batch_size);
+            moea.MOEA_Genetic(mutation_rate, batch_size,Selectparent2);
 
             generation += batch_size;
 
@@ -1201,7 +1274,7 @@ void Population::Genetic(string Method, double mutation_rate, int stagnation)
                 cout << "Pareto front không thay đổi - Tối ưu Tabu" << endl;
                 for (int i = 0; i < current_pareto.size(); ++i)
                 {
-                    Mem[i].Tabu_Optimize(10, 5);
+                    Mem[i].Tabu_Optimize(5, 3);
                 }
             }
         }

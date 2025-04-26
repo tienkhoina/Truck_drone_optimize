@@ -15,14 +15,16 @@ public:
     vector<Solution> Mem;
 
     Population(int _n, int _size);
+    void basic_sort();
     void sort_by_domination_crowdingdistance();
     Solution TNselection(int k = 3);
     Solution crossover(Solution parent1, Solution parent2);
     Solution mutate(Solution parents, double mutation_rate);
+    
     Solution SelectByParent1(Solution parent1);
     void removeSame();
     void create_next_member();
-    void Genetic(string Method, double mutation_rate, int stagnation);
+    void Genetic(string Method, double mutation_rate, int stagnation, bool Selectparent2);
 };
 
 

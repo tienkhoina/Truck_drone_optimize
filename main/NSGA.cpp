@@ -6,7 +6,7 @@
 using namespace std;
 
 template <typename T1, typename T2>
-void NSGA_II<T1, T2>::NSGA_II_Genetic(double mutation_rate, int stagnation)
+void NSGA_II<T1, T2>::NSGA_II_Genetic(double mutation_rate, int stagnation, bool Selectparerent2)
 {
     cout << "Start genetic algorithm..." << endl;
     for (int i = 0; i < stagnation; i++)
@@ -17,7 +17,11 @@ void NSGA_II<T1, T2>::NSGA_II_Genetic(double mutation_rate, int stagnation)
         while (Child.size() < population.size) // Giả sử size() là một phương thức hợp lệ
         {
             T2 parent1 = population.TNselection();
-            T2 parent2 = population.TNselection();
+            T2 parent2 = population.SelectByParent1(parent1);
+            if(!Selectparerent2)
+            {
+                T2 parent2 = population.TNselection();
+            }
 
 
             T2 child1 = population.crossover(parent1, parent2);
@@ -41,5 +45,6 @@ void NSGA_II<T1, T2>::NSGA_II_Genetic(double mutation_rate, int stagnation)
         population.create_next_member();
     }
 }
+
 
 template class NSGA_II<Population, Solution>;

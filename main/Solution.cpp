@@ -419,92 +419,114 @@ void Solution::print() const
     }
 }
 
+
 void Solution::Tabu_Optimize(int max_iter, int tabu_tenure)
 {
-    // Khởi tạo danh sách Tabu: lưu trạng thái và tuổi của các thao tác
-    vector<vector<pair<int, int>>> tabu_list(num_Custom + 1, vector<pair<int, int>>(num_Custom + 1, {0, 0}));
-    int iter = 0;
+    // Khởi tạo danh sách Tabu: [customer][route] -> (tabu_flag, tenure)
+    vector<vector<pair<int, int>>> tabu_list(num_Custom + 1, vector<pair<int, int>>(Route.size(), {0, 0}));
 
+    int iter = 0;
     double best_f2 = f2;
     Solution best_solution = *this;
 
+    cout << "Bắt đầu Tabu Search\n";
+
     while (iter < max_iter)
     {
+     
         vector<Solution> neighbors;
-        vector<pair<int, int>> moves;
+        vector<tuple<int, int, int>> moves; // (customer, old_route, new_route)
 
-        // Sinh hàng xóm bằng cách hoán đổi giữa 2 khách hàng ở 2 route khác nhau
+        // Duyệt qua từng khách hàng trong các route
         for (int i = 0; i < Route.size(); i++)
         {
-            for (int j = i + 1; j < Route.size(); j++)
+    
+            if(Route[i].size() <= 3)
+                continue; 
+            for (int p = 1; p < Route[i].size() - 1; p++) // Bỏ depot
             {
-                for (int p = 1; p < Route[i].size() - 1; p++) // bỏ depot ở đầu và cuối
+                int customer = Route[i][p];
+
+                for (int j = 0; j < Route.size(); j++)
                 {
-                    for (int q = 1; q < Route[j].size() - 1; q++)
+                    if (i == j)
+                        continue; // Không tự chuyển trong cùng 1 route
+
+                    bool inserted = false;
+                    for (int pos = 1; pos < Route[j].size()-1; pos++) // thử tất cả vị trí chèn
                     {
-                        int u = Route[i][p];
-                        int v = Route[j][q];
-
-                        if (u == 0 || v == 0)
-                            continue; // không hoán đổi depot
-
+                        // Copy hiện tại
                         auto neighbor_route = Route;
                         auto neighbor_role = Role;
                         auto neighbor_mark = Mark;
 
-                        swap(neighbor_route[i][p], neighbor_route[j][q]);
-                        neighbor_mark[i] = 0; // cần tính toán lại
+                        // Xóa khách khỏi route i
+                        neighbor_route[i].erase(neighbor_route[i].begin() + p);
+
+                        // Chèn vào route j tại vị trí pos
+                        neighbor_route[j].insert(neighbor_route[j].begin() + pos, customer);
+
+                        // Đánh dấu lại mark
+                        neighbor_mark[i] = 0;
                         neighbor_mark[j] = 0;
 
-                        Solution neighbor(neighbor_route, neighbor_role, neighbor_mark);
-                        neighbor.optimize_trip(); // Tối ưu hóa lời giải hàng xóm
-                        // Kiểm tra tính hợp lệ của lời giải hàng xóm
-                        if (neighbor.f1 != -1 && neighbor.f2 != INT_MAX)
+                        // Check tính hợp lệ
+                        if (checkValidSolution(neighbor_route, neighbor_role))
                         {
-                            bool is_tabu = tabu_list[u][v].first == 1;
-                            bool aspiration = neighbor.f2 < best_f2;
+                          
+                            Solution neighbor(neighbor_route, neighbor_role, neighbor_mark);
+                            neighbor.optimize_trip();
 
-                            if (!is_tabu || aspiration)
+                            if (neighbor.f1 != -1 && neighbor.f2 != INT_MAX)
                             {
-                                neighbors.push_back(neighbor);
-                                moves.push_back({u, v});
+                                bool is_tabu = tabu_list[customer][j].first == 1;
+                                bool aspiration = neighbor.f2 < best_f2;
+
+                                if (!is_tabu || aspiration)
+                                {
+                                    neighbors.push_back(neighbor);
+                                    moves.emplace_back(customer, i, j);
+                                }
                             }
+                            inserted = true;
+                            break; // Chỉ cần 1 chỗ chèn hợp lệ là đủ
                         }
                     }
                 }
             }
         }
 
-        if (neighbors.empty())
-            break;
 
-        // Tìm giải pháp hàng xóm tốt nhất
+        if (neighbors.empty())
+            break; // Không sinh được hàng xóm nào hợp lệ
+
+        // Chọn neighbor tốt nhất
         int best_idx = 0;
-        for (int i = 1; i < neighbors.size(); ++i)
+        for (int i = 1; i < neighbors.size(); i++)
         {
             if (neighbors[i] < neighbors[best_idx])
                 best_idx = i;
         }
 
         Solution best_neighbor = neighbors[best_idx];
-        int u = moves[best_idx].first;
-        int v = moves[best_idx].second;
+        int customer = get<0>(moves[best_idx]);
+        int old_route = get<1>(moves[best_idx]);
+        int new_route = get<2>(moves[best_idx]);
 
-        // Đánh dấu thao tác hoán đổi vào tabu list
-        tabu_list[u][v] = {1, tabu_tenure};
-        tabu_list[v][u] = {1, tabu_tenure}; // đối xứng
+        // Update Tabu List
+        tabu_list[customer][new_route] = {1, tabu_tenure};
 
-        // Cập nhật lời giải hiện tại
+        // Move đến neighbor
         *this = best_neighbor;
 
-        // Cập nhật lời giải tốt nhất nếu có cải thiện
+        // Update best toàn cục
         if (f2 < best_f2)
         {
             best_f2 = f2;
             best_solution = *this;
         }
 
-        // Giảm tuổi các mục trong danh sách tabu
+        // Giảm tenure Tabu List
         for (auto &row : tabu_list)
         {
             for (auto &entry : row)
@@ -521,6 +543,6 @@ void Solution::Tabu_Optimize(int max_iter, int tabu_tenure)
         iter++;
     }
 
-    // Trả lại lời giải tốt nhất toàn cục tìm được
+    // Trả lại best solution tìm được
     *this = best_solution;
 }

@@ -89,14 +89,14 @@ vector<Customer> GenCustomer(int n, double min_start, double max_start, double m
 int main(){
 
     freopen("D:\\Project GA new\\data\\Truck_drone.txt", "w", stdout);
-    int n=50;
+    int n=200;
     double min_coord = 0.0;
     double max_coord = 75.0;
 
     double min_start = 0.0;
     double max_start = 19.0;
 
-    double min_end = 20.0;
+    double min_end = 0.0;
     double max_end = 24.0;
     double min_demand = 0.2;
     double max_demand = 30;
@@ -127,7 +127,7 @@ int main(){
 
     cout << Max_weight_truck << " " << Max_weight_drone << " " << Max_energy_drone << endl;
     cout << t_truck << " " << t_drone <<" "<< k_truck << " " << k_drone << " " << en_drone << " " << cost_truck << " " << cost_drone <<" ";
-    cout << 4 << " " << 4 << endl;
+    cout << 8 << " " << 12 << endl;
 
     for (int i = 0; i < n+1; ++i)
     {

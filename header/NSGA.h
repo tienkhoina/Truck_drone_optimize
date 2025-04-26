@@ -12,7 +12,7 @@ public:
 
     NSGA_II(T1 &_population) : population(_population) {}
 
-    void NSGA_II_Genetic(double mutation_rate, int stagnation);
+    void NSGA_II_Genetic(double mutation_rate, int stagnation,bool Selectparerent2);
 };
 
 #endif // NSGA_H
