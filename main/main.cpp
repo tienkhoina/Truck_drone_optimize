@@ -2,6 +2,7 @@
 #include "Population.h"
 #include <windows.h>
 #include "function.h"
+#include <string>
 
 int main()
 {
@@ -44,7 +45,7 @@ int main()
 
 
     // cout << endl;
-    Population pop(num_Custom, 50);
+    // Population pop(num_Custom, 50);
     
     // cout << Cus[45].start << " " << Cus[45].end << endl;
     // cout << 0 << " " << t_Truck * Ex[0][12] <<" "<< t_Truck * Ex[0][42] << " " << t_Truck * Ex[0][45] << endl;
@@ -62,7 +63,7 @@ int main()
     //     cout << solut[i] << " ";
     // }
     // cout << int(checkValidVector(solut, 0, 0)) << endl;
-    pop.Genetic("MOEA", 0.4, 50,false);
+    // pop.Genetic("MOEA", 0.4, 30,false);
     // vector<vector<int>> Route_father = {
     //     {0, 2, 1, 11, 6, 5, 13, 40, 3, 8, 31, 0},
     //     {0, 35, 38, 23, 0},
@@ -121,21 +122,30 @@ int main()
     // cout << "Sau tối ưu: " << endl;
     // pop.Mem[0].print();
 
-    printParetoFront(pareto_front_in_generation, "D:\\Project GA new\\data\\Pareto1_Moea_without_select_parent2_200.txt");
-    pareto_front_in_generation.clear();
+    // printParetoFront(pareto_front_in_generation, "D:\\Project GA new\\data\\Pareto1_Moea_without_select_parent2_20.txt");
+    // pareto_front_in_generation.clear();
 
-    Population pop2(num_Custom, 50);
-    pop2.Genetic("NSGA_II", 0.4, 50,true);
-    printParetoFront(pareto_front_in_generation, "D:\\Project GA new\\data\\Pareto1_with_ select _parent_200.txt");
+    // Population pop2(num_Custom, 50);
+    // pop2.Genetic("NSGA_II", 0.4, 30,true);
+    // printParetoFront(pareto_front_in_generation, "D:\\Project GA new\\data\\Pareto1_with_ select _parent_20.txt");
 
-    pareto_front_in_generation.clear();
-    Population pop3(num_Custom, 50);
-    pop3.Genetic("NSGA_II", 0.4, 50, false);
-    printParetoFront(pareto_front_in_generation, "D:\\Project GA new\\data\\Pareto1_200.txt");
+    // pareto_front_in_generation.clear();
+    // Population pop3(num_Custom, 50);
+    // pop3.Genetic("NSGA_II", 0.4, 30, false);
+    // printParetoFront(pareto_front_in_generation, "D:\\Project GA new\\data\\Pareto1_20.txt");
 
-    pareto_front_in_generation.clear();
-    Population pop4(num_Custom, 50);
-    pop4.Genetic("MOEA", 0.4, 50, true);
-    printParetoFront(pareto_front_in_generation, "D:\\Project GA new\\data\\Pareto1_Moea_200.txt");
+    // pareto_front_in_generation.clear();
+    // Population pop4(num_Custom, 50);
+    // pop4.Genetic("MOEA", 0.4, 30, true);
+    // printParetoFront(pareto_front_in_generation, "D:\\Project GA new\\data\\Pareto1_Moea_with_select_parent2_0.txt");
+
+    // while(max_truck >=0){
+    //     pareto_front_in_generation.clear();
+        Population pop(num_Custom, 20);
+        pop.Genetic("NSGA_II", 0.4, 30, true);
+        printParetoFront(pareto_front_in_generation, "D:\\Project GA new\\data\\Pareto1_Nsga_with_select_parent2_0.txt");
+    //     max_truck--;
+    //     max_drone += 3;
+    // }
     return 0;
 }

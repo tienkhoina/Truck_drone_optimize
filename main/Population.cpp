@@ -488,6 +488,9 @@ Solution Population::crossover(Solution parent1, Solution parent2){
     //cout << "Khởi tạo xong " << endl;
 
     int k = Route_truck_parent1.size()>1? getRandomNumber(1, Route_truck_parent1.size() - 1):1;
+    if(Route_truck_parent1.size()==0){
+        k = 0;
+    }
     unordered_set<int> chosen;
     while(chosen.size() < k){
         //cout << chosen.size() << " " << k << endl;
