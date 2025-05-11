@@ -44,7 +44,7 @@ void TSPTW::validateData()
 
 double TSPTW::computeBigM() const
 {
-    return 1e4;
+    return 100;
 }
 
 void TSPTW::initializeSolver()
@@ -52,9 +52,14 @@ void TSPTW::initializeSolver()
     solver_ = std::unique_ptr<operations_research::MPSolver>(
         operations_research::MPSolver::CreateSolver("SCIP"));
 
-    if (!solver_)
-        throw std::runtime_error("Failed to create SCIP solver");
-   
+    auto solver = operations_research::MPSolver::CreateSolver("SCIP");
+    if (!solver)
+    {
+        std::cerr << "Không thể tạo solver SCIP\n";
+    }
+    else
+    {
+    }
 }
 
 void TSPTW::createVariables()
@@ -68,6 +73,10 @@ void TSPTW::createVariables()
             if (i != j)
             {
                 x_[i][j] = solver_->MakeBoolVar("x_" + std::to_string(i) + "_" + std::to_string(j));
+                if (x_[i][j] == nullptr)
+                {
+                    std::cerr << "Không thể tạo biến x_" << i << "_" << j << "\n";
+                }
             }
         }
     }
@@ -82,32 +91,55 @@ void TSPTW::createVariables()
 
 void TSPTW::addConstraints()
 {
-    
+    // Tìm khách hàng có thời gian earliest nhỏ nhất (bỏ qua depot là 0)
+    // Ràng buộc khách hàng đầu tiên có thời gian earliest nhỏ nhất
+    int min_earliest_customer = 1;
+    for (int i = 2; i <= n_; ++i)
+    {
+        if (earliest_[i] < earliest_[min_earliest_customer])
+        {
+            min_earliest_customer = i;
+        }
+    }
+
+    // Đảm bảo đi từ depot đến khách hàng này đầu tiên
+    if (x_[0][min_earliest_customer] != nullptr)
+    {
+        x_[0][min_earliest_customer]->SetBounds(1.0, 1.0);
+    }
+
     // Flow constraints
     for (int i = 1; i <= n_; ++i)
     {
-        operations_research::LinearExpr incoming, outgoing;
+        operations_research::MPConstraint *incoming_constraint = solver_->MakeRowConstraint(1.0, 1.0, "in_" + std::to_string(i));
+        operations_research::MPConstraint *outgoing_constraint = solver_->MakeRowConstraint(1.0, 1.0, "out_" + std::to_string(i));
+
         for (int j = 0; j <= n_; ++j)
         {
+
             if (i != j)
             {
-                incoming += x_[j][i];
-                outgoing += x_[i][j];
+                if (x_[j][i] == nullptr || x_[i][j] == nullptr)
+                {
+                    std::cerr << "Không thể tạo biến x_" << j << "_" << i << "\n";
+                    continue;
+                }
+
+                incoming_constraint->SetCoefficient(x_[j][i], 1.0);
+                outgoing_constraint->SetCoefficient(x_[i][j], 1.0);
             }
         }
-        solver_->MakeRowConstraint(incoming == 1, "in_" + std::to_string(i));
-        solver_->MakeRowConstraint(outgoing == 1, "out_" + std::to_string(i));
     }
 
     // Depot constraints
-    operations_research::LinearExpr depart, ret;
+    operations_research::MPConstraint *depart_constraint = solver_->MakeRowConstraint(1.0, 1.0, "depart");
+    operations_research::MPConstraint *ret_constraint = solver_->MakeRowConstraint(1.0, 1.0, "return");
+
     for (int j = 1; j <= n_; ++j)
     {
-        depart += x_[0][j];
-        ret += x_[j][0];
+        depart_constraint->SetCoefficient(x_[0][j], 1.0);
+        ret_constraint->SetCoefficient(x_[j][0], 1.0);
     }
-    solver_->MakeRowConstraint(depart == 1, "depart");
-    solver_->MakeRowConstraint(ret == 1, "return");
 
     // Time constraints
     const double M = computeBigM();
@@ -132,7 +164,7 @@ void TSPTW::addConstraints()
 
 void TSPTW::setObjective()
 {
-    operations_research::MPObjective *const objective = solver_->MutableObjective();
+    operations_research::MPObjective *objective = solver_->MutableObjective();
     objective->SetMinimization();
 
     for (int i = 0; i <= n_; ++i)
@@ -189,9 +221,13 @@ std::vector<int> TSPTW::extractSolution() const
 
 std::pair<int, std::vector<int>> TSPTW::solve()
 {
+
     initializeSolver();
+
     createVariables();
+
     addConstraints();
+
     setObjective();
 
     const auto status = solver_->Solve();
@@ -200,13 +236,13 @@ std::pair<int, std::vector<int>> TSPTW::solve()
     switch (status)
     {
     case operations_research::MPSolver::OPTIMAL:
-        //std::cout << "Optimal solution found! Cost: "
-                 // << objective->Value() << "\n";
+        // std::cout << "Optimal solution found! Cost: "
+        //  << objective->Value() << "\n";
         return {0, extractSolution()};
 
     case operations_research::MPSolver::FEASIBLE:
-        //std::cout << "Feasible solution found (gap: "
-                  //<< objective->BestBound() << ")\n";
+        // std::cout << "Feasible solution found (gap: "
+        //<< objective->BestBound() << ")\n";
         return {1, extractSolution()};
 
     default:

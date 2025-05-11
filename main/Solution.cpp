@@ -334,8 +334,9 @@ void Solution::optimize_trip(){
         invalidate();
         return;
     }
-
-    f2 += cost_drone * num_drone + cost_truck * num_truck;
+    num_truck = old_num_truck;
+    num_drone = old_num_drone;
+    f2 += cost_drone * old_num_drone + cost_truck * old_num_truck;
 }
 
 void Solution::invalidate()
@@ -545,4 +546,47 @@ void Solution::Tabu_Optimize(int max_iter, int tabu_tenure)
 
     // Trả lại best solution tìm được
     *this = best_solution;
+}
+
+void Solution::printToFile(const string &filename) const
+{
+    ofstream out(filename, ios::app); // mở file ở chế độ append
+
+    if (!out)
+    {
+        cerr << "Không thể mở file: " << filename << endl;
+        return;
+    }
+
+    if (f1 == -1 || f2 == INT_MAX)
+    {
+        out << "Not feasible\n";
+        int index = 0;
+        for (const vector<int> &Trip : Route)
+        {
+            for (int x : Trip)
+            {
+                out << x << " ";
+            }
+            out << "Role: " << Role[index++] << "\n";
+        }
+        out << "\n";
+    }
+    else
+    {
+        out << "Số khách: " << f1 << "\n";
+        out << "Chi phí: " << f2 << "\n";
+        int index = 0;
+        for (const vector<int> &Trip : Route)
+        {
+            for (int x : Trip)
+            {
+                out << x << " ";
+            }
+            out << "Role: " << Role[index++] << "\n";
+        }
+        out << "\n";
+    }
+
+    out.close(); // đóng file sau khi ghi xong
 }

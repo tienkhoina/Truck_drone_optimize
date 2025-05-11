@@ -16,26 +16,25 @@ void HamiltonPath::addConstraints()
     // Flow constraints
     for (int i = 1; i <= n_; ++i)
     {
-        operations_research::LinearExpr incoming, outgoing;
+        operations_research::MPConstraint *incoming = solver_->MakeRowConstraint(1.0, 1.0, "in_" + std::to_string(i));
+        operations_research::MPConstraint *outgoing = solver_->MakeRowConstraint(1.0, 1.0, "out_" + std::to_string(i));
+
         for (int j = 0; j <= n_; ++j)
         {
             if (i != j)
             {
-                incoming += x_[j][i];
-                outgoing += x_[i][j];
+                incoming->SetCoefficient(x_[j][i], 1.0);
+                outgoing->SetCoefficient(x_[i][j], 1.0);
             }
         }
-        solver_->MakeRowConstraint(incoming == 1, "in_" + std::to_string(i));
-        solver_->MakeRowConstraint(outgoing == 1, "out_" + std::to_string(i));
     }
 
     // Depot constraints
-    operations_research::LinearExpr depart;
+    operations_research::MPConstraint *depart = solver_->MakeRowConstraint(1.0, 1.0, "depart");
     for (int j = 1; j <= n_; ++j)
     {
-        depart += x_[0][j];
+        depart->SetCoefficient(x_[0][j], 1.0);
     }
-    solver_->MakeRowConstraint(depart == 1, "depart");
 
     // Time constraints
     const double M = computeBigM();
@@ -45,10 +44,7 @@ void HamiltonPath::addConstraints()
         {
             if (i != j && x_[i][j] != nullptr)
             {
-                auto *ct = solver_->MakeRowConstraint(
-                    -solver_->infinity(),
-                    M - distance_matrix_[i][j] - service_times_[i],
-                    "time_" + std::to_string(i) + "_" + std::to_string(j));
+                auto *ct = solver_->MakeRowConstraint(-solver_->infinity(), M - distance_matrix_[i][j] - service_times_[i], "time_" + std::to_string(i) + "_" + std::to_string(j));
 
                 ct->SetCoefficient(t_[i], 1.0);
                 ct->SetCoefficient(t_[j], -1.0);
@@ -57,6 +53,7 @@ void HamiltonPath::addConstraints()
         }
     }
 }
+
 // Ghi đè extractSolution để không thêm depot ở cuối
 std::vector<int> HamiltonPath::extractSolution() const
 {

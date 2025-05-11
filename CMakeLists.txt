@@ -3,18 +3,15 @@ project(ProjectGA)
 
 # Sử dụng UTF-8 để tránh lỗi encoding trên Windows
 add_compile_options(/utf-8)
-# Chỉ định toolchain của vcpkg (đảm bảo vcpkg được sử dụng để tìm thư viện)
-set(CMAKE_TOOLCHAIN_FILE "C:/vcpkg/scripts/buildsystems/vcpkg.cmake" CACHE STRING "")
 
-# Chỉ định đường dẫn OR-Tools
-set(ORTOOLS_DIR "D:/discord data set/or-tools_x64_VisualStudio2022_cpp_v9.10.4067/or-tools_x64_VisualStudio2022_cpp_v9.10.4067/lib/cmake/ortools")
+# Đường dẫn tới bản prebuilt OR-Tools (đã giải nén)
+set(ORTOOLS_DIR "D:/discord data set/or-tools_x64_VisualStudio2022_cpp_v9.10.4067/or-tools_x64_VisualStudio2022_cpp_v9.10.4067")
 
-# Đảm bảo CMake có thể tìm thấy OR-Tools và ZLIB
-set(CMAKE_PREFIX_PATH "${ORTOOLS_DIR};C:/vcpkg/installed/x64-windows")
+# Gán vào CMAKE_PREFIX_PATH để find_package tìm được các file .cmake của OR-Tools
+set(CMAKE_PREFIX_PATH "${ORTOOLS_DIR}")
 
-# Tìm kiếm thư viện OR-Tools và ZLIB
+# Tìm kiếm thư viện OR-Tools (các phụ thuộc như protobuf, abseil, zlib... đã được build sẵn bên trong OR-Tools)
 find_package(ortools REQUIRED)
-find_package(ZLIB REQUIRED)
 
 # Thêm thư mục chứa file header vào đường dẫn tìm kiếm
 include_directories(${PROJECT_SOURCE_DIR}/header)
@@ -26,4 +23,4 @@ file(GLOB_RECURSE SOURCE_FILES ${PROJECT_SOURCE_DIR}/main/*.cpp)
 add_executable(ProjectGA ${SOURCE_FILES})
 
 # Liên kết thư viện với file thực thi
-target_link_libraries(ProjectGA PRIVATE ortools::ortools ZLIB::ZLIB)
+target_link_libraries(ProjectGA PRIVATE ortools::ortools)

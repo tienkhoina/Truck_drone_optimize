@@ -87,56 +87,69 @@ vector<Customer> GenCustomer(int n, double min_start, double max_start, double m
 
 
 int main(){
-
-    freopen("D:\\Project GA new\\data\\Truck_drone.txt", "w", stdout);
-    int n=20;
-    double min_coord = 0.0;
-    double max_coord = 30.0;
-
-    double min_start = 0.0;
-    double max_start = 19.0;
-
-    double min_end = 0.0;
-    double max_end = 24.0;
-    double min_demand = 0.2;
-    double max_demand = 30;
-
-    vector<vector<double>> distance_matrix = GenDistanceMatrix(n+1, min_coord, max_coord);
-    vector<Customer> customers = GenCustomer(n, min_start, max_start, min_end, max_end, min_demand, max_demand);
-
-    double Max_weight_truck = 400;
-    double Max_weight_drone = 50;
-    double Max_energy_drone = 500;
-
-    double t_drone = 0.0125;
-    double t_truck = 0.025;
-
-    double cost_drone = 300000;
-    double cost_truck = 1000000;
-
-    double en_drone = 15;
-
-    double k_truck = 10000;
-    double k_drone = 3000;
-
-    cout << n << endl;
-    for (int i = 0; i < n; ++i)
+    vector<int> num_customers = {20, 50, 100, 200};
+    vector<vector<double>> grid ={{5,10,20},{10,20,30,40},{20,35,50,60},{30,45,60,75}};
+    
+    for(int i = 0; i < num_customers.size(); ++i)
     {
-        cout << customers[i].start << " " << customers[i].end << " " << customers[i].demand << " "<< customers[i].role << endl;
-    }
+        for(double x : grid[i]){
+            for (int j = 1; j <= 4;j++){
+                string file_name;
+                file_name = "D:\\Project GA new\\data\\Data_" + to_string(num_customers[i]) + "_" + to_string(int(x)) + "_" + to_string(j) + ".txt";
+                freopen(file_name.c_str(), "w", stdout);
+                int n = num_customers[i];
+                double min_coord = 0.0;
+                double max_coord = x;
 
-    cout << Max_weight_truck << " " << Max_weight_drone << " " << Max_energy_drone << endl;
-    cout << t_truck << " " << t_drone <<" "<< k_truck << " " << k_drone << " " << en_drone << " " << cost_truck << " " << cost_drone <<" ";
-    cout << 2 << " " << 2 << endl;
+                double min_start = 0.0;
+                double max_start = 19.0;
 
-    for (int i = 0; i < n+1; ++i)
-    {
-        for (int j = 0; j < n+1; ++j)
-        {
-            cout << distance_matrix[i][j] << " ";
+                double min_end = 0.0;
+                double max_end = 24.0;
+                double min_demand = 0.2;
+                double max_demand = 30;
+
+                vector<vector<double>> distance_matrix = GenDistanceMatrix(n + 1, min_coord, max_coord);
+                vector<Customer> customers = GenCustomer(n, min_start, max_start, min_end, max_end, min_demand, max_demand);
+
+                double Max_weight_truck = 400;
+                double Max_weight_drone = 50;
+                double Max_energy_drone = 500;
+
+                double t_drone = 0.0125;
+                double t_truck = 0.025;
+
+                double cost_drone = 300000;
+                double cost_truck = 1000000;
+
+                double en_drone = 15;
+
+                double k_truck = 10000;
+                double k_drone = 3000;
+
+                cout << n << endl;
+                for (int i = 0; i < n; ++i)
+                {
+                    cout << customers[i].start << " " << customers[i].end << " " << customers[i].demand << " " << customers[i].role << endl;
+                }
+
+                cout << Max_weight_truck << " " << Max_weight_drone << " " << Max_energy_drone << endl;
+                cout << t_truck << " " << t_drone << " " << k_truck << " " << k_drone << " " << en_drone << " " << cost_truck << " " << cost_drone << " ";
+                cout << 2 << " " << 2 << endl;
+
+                for (int i = 0; i < n + 1; ++i)
+                {
+                    for (int j = 0; j < n + 1; ++j)
+                    {
+                        cout << distance_matrix[i][j] << " ";
+                    }
+                    cout << endl;
+                }
+            }
         }
-        cout << endl;
+        
     }
+    
     return 0;
 
 }

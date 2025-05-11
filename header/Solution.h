@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include "Constants.h"
+#include <fstream>
 
 using namespace std;
 
@@ -28,6 +29,7 @@ public:
     void invalidate();
     void Tabu_Optimize(int max_iter, int tabu_tenure);
     void print() const;
+    void printToFile(const string &filename) const;
 };
 namespace std
 {

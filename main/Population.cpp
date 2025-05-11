@@ -179,8 +179,12 @@ Population::Population(int _n, int _size) : n(_n), size(_size)
     // cout << endl << inserted.size();
 
     for (auto Sol : inserted)
-        {
+        {   
+            cout << "trước khi tối ưu hóa" << endl;
+            Sol.print();
             Sol.optimize_trip();
+            cout << "sau khi tối ưu hóa" << endl;
+            Sol.print();
             Mem.push_back(Sol);
         }
     // for (auto Sol : inserted)
