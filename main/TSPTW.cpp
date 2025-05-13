@@ -51,15 +51,6 @@ void TSPTW::initializeSolver()
 {
     solver_ = std::unique_ptr<operations_research::MPSolver>(
         operations_research::MPSolver::CreateSolver("SCIP"));
-
-    auto solver = operations_research::MPSolver::CreateSolver("SCIP");
-    if (!solver)
-    {
-        std::cerr << "Không thể tạo solver SCIP\n";
-    }
-    else
-    {
-    }
 }
 
 void TSPTW::createVariables()

@@ -140,16 +140,6 @@ Population::Population(int _n, int _size) : n(_n), size(_size)
                     //     cout << x << " ";
                     // cout << endl;
                     // cout << "lastDroneTime = " << lastDroneTime << endl;
-                    if(route.size()<=11){
-                        route = solverTSPTWmapping(route, Ex, t_drone,now).second;
-                    }
-                    else{
-                        auto lastroute = route;
-                        route = solverTSPTWmappingLarge(route, Ex, t_drone, now,10).second;
-                        if(!checkValidVector(route, role, now)){
-                            route = lastroute;
-                        }
-                    }
                     Route.push_back(route);
                     Role.push_back(role);
                     lastDroneTime = getTimeDroneTrip(route,now); // Cập nhật thời gian bắt đầu của trip cuối cùng của Drone
@@ -1251,11 +1241,11 @@ void Population::Genetic(string Method, double mutation_rate, int stagnation, bo
 
             if (is_same_pareto(last_pareto, current_pareto))
             {
-                cout << "Pareto front không thay đổi - Tối ưu Tabu" << endl;
-                for (int i = 0; i < current_pareto.size(); ++i)
-                {
-                    Mem[i].Tabu_Optimize(5, 3);
-                }
+                // cout << "Pareto front không thay đổi - Tối ưu Tabu" << endl;
+                // for (int i = 0; i < current_pareto.size(); ++i)
+                // {
+                //     Mem[i].Tabu_Optimize(5, 3);
+                // }
             }
         }
     }
@@ -1279,10 +1269,10 @@ void Population::Genetic(string Method, double mutation_rate, int stagnation, bo
             if (is_same_pareto(last_pareto, current_pareto))
             {
                 cout << "Pareto front không thay đổi - Tối ưu Tabu" << endl;
-                for (int i = 0; i < current_pareto.size(); ++i)
-                {
-                    Mem[i].Tabu_Optimize(5, 3);
-                }
+                // for (int i = 0; i < current_pareto.size(); ++i)
+                // {
+                //     Mem[i].Tabu_Optimize(5, 3);
+                // }
             }
         }
     }

@@ -8,13 +8,13 @@ int main()
 {
     SetConsoleOutputCP(65001);
     vector<int> num_customers = {20, 50, 100, 200};
-    vector<vector<double>> grid = {{5, 10, 20}, {10, 20, 30, 40}, {20, 35, 50, 60}, {30, 45, 60, 75}};
+    vector<vector<double>> grid = {{5, 10, 20}, {10, 20, 30, 40}, {20, 35, 50, 60}, { 60, 75}};
 
-    for (int in = 0; in < num_customers.size(); ++in)
+    for (int in = 3; in < num_customers.size(); ++in)
     {
         for (double x : grid[in])
         {
-            for (int jn = 1; jn <= 4; jn++)
+            for (int jn = 3; jn <= 4; jn++)
             {
                 string data_file_name;
                 data_file_name= "D:\\Project GA new\\data\\Data_" + to_string(num_customers[in]) + "_" + to_string(int(x)) + "_" + to_string(jn) + ".txt";
@@ -67,38 +67,38 @@ int main()
 
                 int pop_size = (num_Custom <= 20) ? 30 : 50;
 
-                auto pop1 = Population(num_Custom, pop_size);
-                
+                // auto pop1 = Population(num_Custom, pop_size);
 
 
-                auto pop2 = Population(num_Custom, pop_size);
+
+                // auto pop2 = Population(num_Custom, pop_size);
                 auto pop3 = Population(num_Custom, pop_size);
                 auto pop4 = Population(num_Custom, pop_size);
 
-                pop1.Genetic("NSGA_II", 0.4, num_gen, true);
-                pop1.sort_by_domination_crowdingdistance();
-                int size_pareto_front = pareto_front_in_generation.back().size();
+                // pop1.Genetic("NSGA_II", 0.4, num_gen, true);
+                // pop1.sort_by_domination_crowdingdistance();
+                // int size_pareto_front = pareto_front_in_generation.back().size();
 
-                for(int index = 0; index < size_pareto_front; ++index)
-                {
-                    pop1.Mem[index].printToFile(file_solution_result_1);
-                }
+                // for(int index = 0; index < size_pareto_front; ++index)
+                // {
+                //     pop1.Mem[index].printToFile(file_solution_result_1);
+                // }
 
-                printParetoFront(pareto_front_in_generation, file_pareto_result_1);
-                pareto_front_in_generation.clear();
+                // printParetoFront(pareto_front_in_generation, file_pareto_result_1);
+                // pareto_front_in_generation.clear();
 
-                pop2.Genetic("NSGA_II", 0.4, num_gen, false);
-                pop2.sort_by_domination_crowdingdistance();
-                size_pareto_front = pareto_front_in_generation.back().size();
-                for(int index = 0; index < size_pareto_front; ++index)
-                {
-                    pop2.Mem[index].printToFile(file_solution_result_2);
-                }
-                printParetoFront(pareto_front_in_generation, file_pareto_result_2);
-                pareto_front_in_generation.clear();
+                // pop2.Genetic("NSGA_II", 0.4, num_gen, false);
+                // pop2.sort_by_domination_crowdingdistance();
+                // size_pareto_front = pareto_front_in_generation.back().size();
+                // for(int index = 0; index < size_pareto_front; ++index)
+                // {
+                //     pop2.Mem[index].printToFile(file_solution_result_2);
+                // }
+                // printParetoFront(pareto_front_in_generation, file_pareto_result_2);
+                // pareto_front_in_generation.clear();
                 pop3.Genetic("MOEA", 0.4, num_gen, true);
                 pop3.sort_by_domination_crowdingdistance();
-                size_pareto_front = pareto_front_in_generation.back().size();
+                int size_pareto_front = pareto_front_in_generation.back().size();
                 for(int index = 0; index < size_pareto_front; ++index)
                 {
                     pop3.Mem[index].printToFile(file_solution_result_3);

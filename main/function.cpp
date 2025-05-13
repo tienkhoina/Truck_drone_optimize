@@ -235,25 +235,6 @@ pair<int, vector<int>> solverTSPTWmapping(const vector<int> &Trip, const vector<
     }
     else
     {
-        for (int i = 0; i < size; i++)
-        {
-            cout << i << " " << mapping[i] << endl;
-        }
-        cout << "time " << start_time << endl;
-        for (int i = 0; i < size; i++)
-        {
-            cout << earliest[i] << " " << lastest[i] << endl;
-        }
-
-        for (int i = 0; i < size; i++)
-        {
-            for (int j = 0; j < size; j++)
-            {
-
-                cout << map_cost[i][j] << " ";
-            }
-            cout << endl;
-        }
         return {-1, {}};
     }
 }
