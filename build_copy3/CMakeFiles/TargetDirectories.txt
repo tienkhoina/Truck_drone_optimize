@@ -1,0 +1,3 @@
+D:/Project GA new/build_copy3/CMakeFiles/ProjectGA.dir
+D:/Project GA new/build_copy3/CMakeFiles/ALL_BUILD.dir
+D:/Project GA new/build_copy3/CMakeFiles/ZERO_CHECK.dir

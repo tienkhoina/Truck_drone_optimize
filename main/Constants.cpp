@@ -17,6 +17,6 @@ double cost_truck;
 int min_custom_serve;
 int max_truck;
 int max_drone;
-double drop_insert_custom=0.1;
-double drop_insert_trip=0;
+double drop_insert_custom=0.2;
+double drop_insert_trip=0.2;
 vector<vector<pair<int, double>>> pareto_front_in_generation;

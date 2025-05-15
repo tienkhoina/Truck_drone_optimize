@@ -38,3 +38,46 @@ Chi phí: 2.96001e+06
 0 12 13 10 5 2 11 0 Role: 1
 0 4 3 17 19 7 0 Role: 2
 
+Số khách: 19
+Chi phí: 3.27214e+06
+0 7 8 5 14 0 Role: 0
+0 4 6 18 2 16 0 Role: 0
+0 10 13 11 0 Role: 1
+0 1 0 Role: 2
+0 15 0 Role: 2
+0 17 3 12 0 Role: 2
+0 19 20 0 Role: 2
+
+Số khách: 8
+Chi phí: 1.77607e+06
+0 19 0 Role: 0
+0 20 5 2 0 Role: 1
+0 8 0 Role: 2
+0 4 14 0 Role: 2
+0 11 0 Role: 2
+
+Số khách: 17
+Chi phí: 3.05801e+06
+0 15 18 0 Role: 0
+0 9 8 5 14 0 Role: 0
+0 4 11 2 10 13 0 Role: 1
+0 19 0 Role: 2
+0 7 12 20 3 0 Role: 2
+0 17 0 Role: 2
+
+Số khách: 16
+Chi phí: 1.93e+06
+0 7 18 14 0 Role: 0
+0 4 15 0 Role: 1
+0 19 10 5 2 3 11 0 Role: 1
+0 8 13 0 Role: 1
+0 17 0 Role: 2
+0 20 12 0 Role: 2
+
+Số khách: 13
+Chi phí: 1.89689e+06
+0 7 8 0 Role: 0
+0 19 12 3 0 Role: 1
+0 4 11 2 14 0 Role: 1
+0 20 13 10 5 0 Role: 2
+

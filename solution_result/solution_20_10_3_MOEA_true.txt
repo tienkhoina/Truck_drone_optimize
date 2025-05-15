@@ -6,3 +6,28 @@ Chi phí: 2.18408e+06
 0 14 20 0 Role: 2
 0 1 0 Role: 2
 
+Số khách: 15
+Chi phí: 1.88766e+06
+0 19 0 Role: 0
+0 18 9 15 7 6 16 17 0 Role: 1
+0 3 5 1 10 13 0 Role: 1
+0 4 0 Role: 1
+0 11 0 Role: 2
+
+Số khách: 18
+Chi phí: 2.03452e+06
+0 18 9 10 8 2 4 3 16 13 0 Role: 0
+0 6 7 11 5 17 0 Role: 1
+0 1 0 Role: 1
+0 20 0 Role: 2
+0 14 15 0 Role: 2
+
+Số khách: 16
+Chi phí: 1.9282e+06
+0 16 17 6 0 Role: 0
+0 3 0 Role: 1
+0 18 9 11 13 7 0 Role: 1
+0 5 4 10 0 Role: 1
+0 14 15 20 0 Role: 2
+0 1 0 Role: 2
+
