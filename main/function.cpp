@@ -7,7 +7,7 @@
 #include "Hamilton_path.h"
 
 random_device rd;
-mt19937 gen(rd());
+mt19937 gen(rd()); // Khởi tạo bộ sinh số ngẫu nhiên
 
 int getRandomNumber(int a, int b)
 {

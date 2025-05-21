@@ -1241,11 +1241,11 @@ void Population::Genetic(string Method, double mutation_rate, int stagnation, bo
 
             if (is_same_pareto(last_pareto, current_pareto))
             {
-                // cout << "Pareto front không thay đổi - Tối ưu Tabu" << endl;
-                // for (int i = 0; i < current_pareto.size(); ++i)
-                // {
-                //     Mem[i].Tabu_Optimize(5, 3);
-                // }
+                cout << "Pareto front không thay đổi - Tối ưu Tabu" << endl;
+                for (int i = 0; i < current_pareto.size(); ++i)
+                {
+                    Mem[i].Tabu_Optimize(5, 3);
+                }
             }
         }
     }
@@ -1269,10 +1269,10 @@ void Population::Genetic(string Method, double mutation_rate, int stagnation, bo
             if (is_same_pareto(last_pareto, current_pareto))
             {
                 cout << "Pareto front không thay đổi - Tối ưu Tabu" << endl;
-                // for (int i = 0; i < current_pareto.size(); ++i)
-                // {
-                //     Mem[i].Tabu_Optimize(5, 3);
-                // }
+                for (int i = 0; i < current_pareto.size(); ++i)
+                {
+                    Mem[i].Tabu_Optimize(5, 3);
+                }
             }
         }
     }

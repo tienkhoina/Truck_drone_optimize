@@ -88,7 +88,8 @@ vector<Customer> GenCustomer(int n, double min_start, double max_start, double m
 
 int main(){
     vector<int> num_customers = {20, 50, 100, 200};
-    vector<vector<double>> grid ={{5,10,20},{10,20,30,40},{20,35,50,60},{30,45,60,75}};
+    vector<vector<double>> grid ={{5,10,20},{10,20,30,40},{10,20,30,40},{10,20,30,40}};
+    vector<pair<int, int>> td = {{2,2},{4,6},{6,9},{8,12}};
     
     for(int i = 0; i < num_customers.size(); ++i)
     {
@@ -135,7 +136,7 @@ int main(){
 
                 cout << Max_weight_truck << " " << Max_weight_drone << " " << Max_energy_drone << endl;
                 cout << t_truck << " " << t_drone << " " << k_truck << " " << k_drone << " " << en_drone << " " << cost_truck << " " << cost_drone << " ";
-                cout << 2 << " " << 2 << endl;
+                cout << td[i].first << " " << td[i].second << endl;
 
                 for (int i = 0; i < n + 1; ++i)
                 {

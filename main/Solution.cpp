@@ -382,8 +382,7 @@ bool Solution::operator==(const Solution &other) const
     return f1 == other.f1 &&
            abs(f2 - other.f2) < 1e-6 && // Tránh lỗi số thực
            num_drone == other.num_drone &&
-           num_truck == other.num_truck &&
-           Role == other.Role;
+           num_truck == other.num_truck;
 }
 
 // In kết quả
