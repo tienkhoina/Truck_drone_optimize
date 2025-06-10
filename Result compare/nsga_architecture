@@ -1,0 +1,32 @@
+digraph {
+	rankdir=TB size=10
+	A [label="Khởi tạo quần thể ban đầu
+(N cá thể)" shape=box]
+	B [label="Đánh giá hàm mục tiêu" shape=box]
+	C [label="Non-dominated Sorting
+(Xếp hạng theo Pareto)" shape=box]
+	D [label="Tính Crowding Distance
+(Đo độ đa dạng)" shape=box]
+	E [label="Lựa chọn (Tournament Selection)" shape=box]
+	F [label="Lai ghép + Đột biến
+(Crossover + Mutation)" shape=box]
+	G [label="Tạo quần thể con" shape=box]
+	H [label="Kết hợp quần thể cha + con
+(tổng 2N)" shape=box]
+	I [label="Non-dominated Sorting
+(Lần 2)" shape=box]
+	J [label="Chọn N cá thể tốt nhất
+(theo rank + crowding)" shape=box]
+	K [label="Quần thể mới
+→ Lặp lại" shape=box]
+	A -> B
+	B -> C
+	C -> D
+	D -> E
+	E -> F
+	F -> G
+	G -> H
+	H -> I
+	I -> J
+	J -> K
+}

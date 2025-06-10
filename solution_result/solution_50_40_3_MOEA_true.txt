@@ -1,0 +1,357 @@
+Số khách: 9
+Chi phí: 2.6281e+06
+0 17 0 Role: 0
+0 40 0 Role: 1
+0 39 0 Role: 2
+0 35 4 21 0 Role: 2
+0 41 0 Role: 2
+0 23 0 Role: 2
+0 18 0 Role: 3
+
+Số khách: 13
+Chi phí: 3.27226e+06
+0 36 10 30 45 0 Role: 0
+0 39 23 0 Role: 1
+0 4 21 35 0 Role: 1
+0 41 0 Role: 1
+0 18 0 Role: 2
+0 40 17 0 Role: 2
+
+Số khách: 15
+Chi phí: 6.65601e+06
+0 11 0 Role: 0
+0 22 3 24 0 Role: 0
+0 26 10 0 Role: 0
+0 40 17 23 0 Role: 1
+0 39 0 Role: 2
+0 21 18 35 0 Role: 2
+0 4 0 Role: 3
+0 41 0 Role: 3
+
+Số khách: 15
+Chi phí: 7.53392e+06
+0 48 39 34 0 Role: 0
+0 47 7 0 Role: 0
+0 41 21 0 Role: 0
+0 6 43 0 Role: 0
+0 23 35 0 Role: 1
+0 40 17 0 Role: 2
+0 4 18 0 Role: 2
+
+Số khách: 30
+Chi phí: 1.10426e+07
+0 8 44 5 38 4 10 41 0 Role: 0
+0 24 7 32 0 Role: 0
+0 18 0 Role: 0
+0 1 39 36 34 23 27 31 47 21 45 30 14 12 20 49 37 0 Role: 0
+0 17 0 Role: 1
+0 35 0 Role: 1
+0 40 0 Role: 2
+
+Số khách: 18
+Chi phí: 7.64977e+06
+0 27 23 47 0 Role: 0
+0 10 7 20 50 0 Role: 0
+0 49 41 44 42 0 Role: 0
+0 39 0 Role: 1
+0 4 0 Role: 1
+0 18 35 0 Role: 1
+0 21 0 Role: 1
+0 17 0 Role: 2
+0 40 0 Role: 3
+
+Số khách: 18
+Chi phí: 8.4852e+06
+0 19 49 26 0 Role: 0
+0 18 14 0 Role: 0
+0 43 34 0 Role: 0
+0 39 37 32 46 41 21 0 Role: 0
+0 4 35 0 Role: 1
+0 23 0 Role: 1
+0 17 0 Role: 2
+0 40 0 Role: 3
+
+Số khách: 11
+Chi phí: 3.15284e+06
+0 41 9 16 35 39 0 Role: 0
+0 4 21 0 Role: 1
+0 18 23 0 Role: 1
+0 17 0 Role: 2
+0 40 0 Role: 3
+
+Số khách: 16
+Chi phí: 7.79443e+06
+0 1 0 Role: 0
+0 21 35 30 34 20 38 0 Role: 0
+0 15 0 Role: 0
+0 14 0 Role: 0
+0 41 0 Role: 1
+0 23 39 0 Role: 1
+0 18 4 0 Role: 1
+0 17 0 Role: 2
+0 40 0 Role: 3
+
+Số khách: 10
+Chi phí: 3.19614e+06
+0 37 0 Role: 0
+0 35 4 0 Role: 1
+0 18 21 23 0 Role: 2
+0 17 39 0 Role: 3
+0 41 0 Role: 3
+0 40 0 Role: 4
+
+Số khách: 12
+Chi phí: 6.11864e+06
+0 39 0 Role: 0
+0 27 5 0 Role: 0
+0 49 0 Role: 0
+0 35 4 21 0 Role: 1
+0 41 0 Role: 1
+0 23 0 Role: 1
+0 17 0 Role: 2
+0 18 0 Role: 2
+0 40 0 Role: 3
+
+Số khách: 21
+Chi phí: 8.68912e+06
+0 47 0 Role: 0
+0 50 46 0 Role: 0
+0 40 20 38 0 Role: 0
+0 44 3 10 32 7 4 21 37 16 0 Role: 0
+0 41 0 Role: 1
+0 23 18 35 0 Role: 1
+0 39 0 Role: 1
+0 17 0 Role: 2
+
+Số khách: 16
+Chi phí: 8.11393e+06
+0 42 16 44 0 Role: 0
+0 25 0 Role: 0
+0 12 39 50 0 Role: 0
+0 36 0 Role: 0
+0 17 23 0 Role: 1
+0 4 21 35 0 Role: 1
+0 41 0 Role: 1
+0 18 0 Role: 2
+0 40 0 Role: 2
+
+Số khách: 11
+Chi phí: 4.64284e+06
+0 38 0 Role: 0
+0 18 7 41 0 Role: 0
+0 35 23 0 Role: 1
+0 4 21 0 Role: 1
+0 39 0 Role: 1
+0 17 0 Role: 2
+0 40 0 Role: 3
+
+Số khách: 10
+Chi phí: 2.58879e+06
+0 3 0 Role: 0
+0 18 35 21 23 0 Role: 1
+0 4 0 Role: 1
+0 41 0 Role: 1
+0 39 0 Role: 1
+0 40 17 0 Role: 2
+
+Số khách: 18
+Chi phí: 7.98531e+06
+0 14 50 38 30 32 0 Role: 0
+0 34 40 0 Role: 0
+0 43 33 0 Role: 0
+0 13 39 23 41 0 Role: 0
+0 4 35 0 Role: 1
+0 21 0 Role: 1
+0 18 0 Role: 2
+0 17 0 Role: 2
+
+Số khách: 10
+Chi phí: 2.89313e+06
+0 43 0 Role: 0
+0 41 0 Role: 1
+0 23 0 Role: 1
+0 18 21 35 0 Role: 2
+0 4 0 Role: 2
+0 39 0 Role: 2
+0 40 17 0 Role: 3
+
+Số khách: 15
+Chi phí: 6.15699e+06
+0 8 29 44 16 0 Role: 0
+0 9 39 10 0 Role: 0
+0 35 4 21 0 Role: 1
+0 18 23 0 Role: 2
+0 17 0 Role: 3
+0 41 0 Role: 4
+0 40 0 Role: 5
+
+Số khách: 11
+Chi phí: 4.13819e+06
+0 34 0 Role: 0
+0 47 0 Role: 0
+0 41 0 Role: 1
+0 39 23 0 Role: 1
+0 21 4 0 Role: 1
+0 35 0 Role: 1
+0 40 17 0 Role: 2
+0 18 0 Role: 2
+
+Số khách: 14
+Chi phí: 5.54741e+06
+0 29 0 Role: 0
+0 25 31 44 50 0 Role: 0
+0 21 18 35 0 Role: 1
+0 40 23 0 Role: 2
+0 39 0 Role: 3
+0 41 0 Role: 4
+0 4 0 Role: 4
+0 17 0 Role: 4
+
+Số khách: 11
+Chi phí: 3.05101e+06
+0 10 12 0 Role: 0
+0 23 18 35 0 Role: 1
+0 21 4 0 Role: 1
+0 17 39 0 Role: 2
+0 41 0 Role: 2
+0 40 0 Role: 3
+
+Số khách: 22
+Chi phí: 8.91222e+06
+0 13 16 0 Role: 0
+0 18 28 50 20 49 4 0 Role: 0
+0 46 32 38 14 30 0 Role: 0
+0 33 41 5 0 Role: 0
+0 35 21 23 0 Role: 1
+0 40 39 0 Role: 2
+0 17 0 Role: 3
+
+Số khách: 20
+Chi phí: 9.73801e+06
+0 26 29 12 27 47 0 Role: 0
+0 46 0 Role: 0
+0 8 0 Role: 0
+0 37 17 16 44 18 38 0 Role: 0
+0 21 23 0 Role: 1
+0 35 4 0 Role: 2
+0 40 39 0 Role: 3
+0 41 0 Role: 3
+
+Số khách: 17
+Chi phí: 8.44721e+06
+0 46 21 0 Role: 0
+0 13 36 0 Role: 0
+0 24 0 Role: 0
+0 40 42 29 34 49 0 Role: 0
+0 17 0 Role: 1
+0 35 23 0 Role: 1
+0 41 0 Role: 1
+0 39 0 Role: 2
+0 4 18 0 Role: 2
+
+Số khách: 11
+Chi phí: 3.27177e+06
+0 5 32 0 Role: 0
+0 18 21 23 0 Role: 1
+0 4 35 0 Role: 1
+0 39 0 Role: 1
+0 41 0 Role: 1
+0 17 0 Role: 2
+0 40 0 Role: 3
+
+Số khách: 13
+Chi phí: 3.44289e+06
+0 14 37 7 30 0 Role: 0
+0 18 0 Role: 1
+0 17 23 0 Role: 1
+0 35 21 4 0 Role: 2
+0 41 0 Role: 3
+0 39 0 Role: 3
+0 40 0 Role: 4
+
+Số khách: 14
+Chi phí: 8.15983e+06
+0 3 33 35 0 Role: 0
+0 18 31 0 Role: 0
+0 41 0 Role: 0
+0 50 5 0 Role: 0
+0 21 4 0 Role: 1
+0 23 39 0 Role: 2
+0 17 0 Role: 3
+0 40 0 Role: 4
+
+Số khách: 13
+Chi phí: 3.60688e+06
+0 50 14 10 32 0 Role: 0
+0 4 18 0 Role: 1
+0 21 23 0 Role: 1
+0 41 0 Role: 1
+0 39 0 Role: 1
+0 35 0 Role: 2
+0 17 0 Role: 3
+0 40 0 Role: 4
+
+Số khách: 11
+Chi phí: 4.35231e+06
+0 29 0 Role: 0
+0 33 0 Role: 0
+0 35 23 0 Role: 1
+0 4 21 0 Role: 1
+0 39 0 Role: 1
+0 41 0 Role: 1
+0 18 0 Role: 2
+0 40 17 0 Role: 2
+
+Số khách: 23
+Chi phí: 8.61595e+06
+0 9 45 41 21 27 31 0 Role: 0
+0 8 48 26 23 34 50 0 Role: 0
+0 13 35 14 49 46 12 0 Role: 0
+0 18 4 0 Role: 1
+0 17 39 0 Role: 1
+0 40 0 Role: 2
+
+Số khách: 16
+Chi phí: 8.168e+06
+0 16 0 Role: 0
+0 25 0 Role: 0
+0 15 38 41 4 30 0 Role: 0
+0 7 43 0 Role: 0
+0 18 21 35 0 Role: 1
+0 39 23 0 Role: 1
+0 17 0 Role: 2
+0 40 0 Role: 3
+
+Số khách: 17
+Chi phí: 5.80298e+06
+0 11 16 43 0 Role: 0
+0 20 4 42 44 5 32 0 Role: 0
+0 40 23 0 Role: 1
+0 39 0 Role: 2
+0 21 35 0 Role: 2
+0 41 0 Role: 2
+0 17 0 Role: 3
+0 18 0 Role: 3
+
+Số khách: 22
+Chi phí: 9.03277e+06
+0 2 0 Role: 0
+0 32 38 14 44 0 Role: 0
+0 10 37 5 30 0 Role: 0
+0 19 9 20 26 0 Role: 0
+0 41 0 Role: 1
+0 21 35 0 Role: 1
+0 23 39 0 Role: 1
+0 4 0 Role: 1
+0 40 17 0 Role: 2
+0 18 0 Role: 2
+
+Số khách: 18
+Chi phí: 5.10763e+06
+0 8 27 34 50 12 7 16 21 41 20 0 Role: 0
+0 13 39 0 Role: 0
+0 17 23 0 Role: 1
+0 18 35 0 Role: 1
+0 4 0 Role: 1
+0 40 0 Role: 2
+

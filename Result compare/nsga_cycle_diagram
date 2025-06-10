@@ -1,0 +1,40 @@
+digraph {
+	rankdir=LR size="10,5"
+	node [fillcolor=lightblue shape=box style="rounded,filled"]
+	A [label="1. Khởi tạo
+Quần thể ban đầu"]
+	B [label="2. Đánh giá
+Hàm mục tiêu"]
+	C [label="3. Xếp hạng
+Non-dominated Sorting"]
+	D [label="4. Tính
+Crowding Distance"]
+	E [label="5. Lựa chọn
+Tournament Selection"]
+	F [label="6. Lai ghép & Đột biến
+(Crossover + Mutation)"]
+	G [label="7. Tạo quần thể con
+(kết hợp cha + con)"]
+	H [label="8. Xếp hạng lại
+Non-dominated Sorting"]
+	I [label="9. Chọn N cá thể
+(tốt nhất)"]
+	J [label="10. Quần thể mới
+→ Lặp lại"]
+	{
+		rank=same
+		A -> B
+		B -> C
+		C -> D
+		D -> E
+		E -> F
+	}
+	{
+		rank=same
+		F -> G
+		G -> H
+		H -> I
+		I -> J
+	}
+	J -> A [label="Lặp lại thế hệ tiếp theo" color=gray style=dashed]
+}
